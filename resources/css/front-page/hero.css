@@ -1,0 +1,1617 @@
+ /* ============================================================
+    BIZZSOFT HERO — CONNECTED DIGITAL SOLUTIONS
+    ============================================================ */
+
+.hero {
+    position: relative;
+    min-height: 100svh;
+    overflow: hidden;
+    background: #030711;
+    color: #ffffff;
+}
+
+
+/* ============================================================
+   BACKGROUND
+   ============================================================ */
+
+.hero-background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.hero-background-grid {
+    position: absolute;
+    inset: 0;
+
+    background-image:
+        linear-gradient(
+            rgba(255, 255, 255, 0.025) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.025) 1px,
+            transparent 1px
+        );
+
+    background-size: 72px 72px;
+
+    opacity: 0.32;
+
+    mask-image:
+        linear-gradient(
+            to bottom,
+            transparent,
+            black 18%,
+            black 78%,
+            transparent
+        );
+
+    -webkit-mask-image:
+        linear-gradient(
+            to bottom,
+            transparent,
+            black 18%,
+            black 78%,
+            transparent
+        );
+}
+
+
+/* ============================================================
+   ATMOSPHERIC GLOWS
+   ============================================================ */
+
+.hero-background-glow {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(80px);
+}
+
+.hero-background-glow-one {
+    width: 520px;
+    height: 520px;
+
+    right: -180px;
+    top: 8%;
+
+    background:
+        rgba(0, 217, 255, 0.10);
+}
+
+.hero-background-glow-two {
+    width: 460px;
+    height: 460px;
+
+    left: 28%;
+    bottom: -260px;
+
+    background:
+        rgba(166, 108, 255, 0.08);
+}
+
+.hero-background-vignette {
+    position: absolute;
+    inset: 0;
+
+    background:
+        radial-gradient(
+            ellipse at center,
+            transparent 20%,
+            rgba(1, 5, 14, 0.24) 60%,
+            rgba(1, 4, 11, 0.92) 100%
+        );
+
+    pointer-events: none;
+}
+
+
+/* ============================================================
+   MAIN CONTAINER
+   ============================================================ */
+
+.hero-container {
+    position: relative;
+    z-index: 5;
+
+    width:
+        min(
+            1400px,
+            calc(100% - 80px)
+        );
+
+    min-height: 100svh;
+
+    margin: 0 auto;
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 0.88fr)
+        minmax(560px, 1.12fr);
+
+    align-items: center;
+
+    gap: 30px;
+
+    padding:
+        120px
+        0
+        90px;
+}
+
+
+/* ============================================================
+   LEFT CONTENT
+   ============================================================ */
+
+.hero-content {
+    position: relative;
+    z-index: 10;
+
+    max-width: 650px;
+}
+
+
+/* ============================================================
+   EYEBROW
+   ============================================================ */
+
+.hero-eyebrow {
+    display: flex;
+    align-items: center;
+
+    gap: 16px;
+
+    margin-bottom: 28px;
+
+    color:
+        rgba(255, 255, 255, 0.60);
+
+    font-size: 11px;
+    font-weight: 600;
+
+    letter-spacing: 0.28em;
+
+    text-transform: uppercase;
+}
+
+.hero-eyebrow-line {
+    width: 42px;
+    height: 1px;
+
+    flex-shrink: 0;
+
+    background:
+        linear-gradient(
+            90deg,
+            #00d9ff,
+            #6c6cff
+        );
+
+    box-shadow:
+        0 0 12px
+        rgba(0, 217, 255, 0.42);
+}
+
+
+/* ============================================================
+   TITLE
+   ============================================================ */
+
+.hero-title {
+    display: flex;
+    flex-direction: column;
+
+    margin: 0;
+
+    font-size:
+        clamp(
+            52px,
+            5.2vw,
+            78px
+        );
+
+    font-weight: 750;
+
+    line-height: 0.94;
+
+    letter-spacing: -0.065em;
+}
+
+.hero-title > span {
+    display: block;
+}
+
+.hero-title-accent {
+    margin-top: 6px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #00d9ff 0%,
+            #6c6cff 52%,
+            #ff4fc3 100%
+        );
+
+    -webkit-background-clip: text;
+    background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+
+    white-space: nowrap;
+}
+
+.hero-cursor {
+    display: inline-block;
+
+    margin-left: 5px;
+
+    color: #00d9ff;
+
+    -webkit-text-fill-color: #00d9ff;
+
+    animation:
+        hero-cursor-blink
+        1s
+        steps(1)
+        infinite;
+}
+
+@keyframes hero-cursor-blink {
+    0%,
+    48% {
+        opacity: 1;
+    }
+
+    49%,
+    100% {
+        opacity: 0;
+    }
+}
+
+
+/* ============================================================
+   DESCRIPTION
+   ============================================================ */
+
+.hero-description {
+    max-width: 540px;
+
+    margin:
+        28px
+        0
+        0;
+
+    color:
+        rgba(224, 233, 247, 0.62);
+
+    font-size: 15px;
+
+    line-height: 1.8;
+}
+
+
+/* ============================================================
+   CTA BUTTONS
+   ============================================================ */
+
+.hero-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin-top: 30px;
+}
+
+.hero-button {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 58px;
+
+    padding:
+        0
+        26px;
+
+    border-radius: 999px;
+
+    text-decoration: none;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    letter-spacing: 0.08em;
+
+    text-transform: uppercase;
+
+    white-space: nowrap;
+
+    transition:
+        transform 350ms ease,
+        border-color 350ms ease,
+        background 350ms ease,
+        box-shadow 350ms ease;
+}
+
+.hero-button-primary {
+    gap: 22px;
+
+    color: #03101b;
+
+    background:
+        linear-gradient(
+            100deg,
+            #00d9ff,
+            #6c6cff 55%,
+            #f22caf
+        );
+
+    box-shadow:
+        0 10px 35px
+        rgba(0, 179, 255, 0.18);
+}
+
+.hero-button-primary:hover {
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 14px 42px
+        rgba(0, 179, 255, 0.26);
+}
+
+.hero-button-arrow {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 58px;
+    height: 58px;
+
+    flex-shrink: 0;
+
+    margin-left: auto;
+    margin-right: -26px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.78);
+
+    color: #03101b;
+
+    font-size: 22px;
+
+    line-height: 1;
+
+    transition:
+        transform 350ms ease;
+}
+
+.hero-button-arrow span {
+    display: block;
+
+    line-height: 1;
+
+    transform:
+        translateY(-2px);
+}
+
+.hero-button-primary:hover .hero-button-arrow {
+    transform:
+        translateX(4px);
+}
+
+.hero-button-secondary {
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.14);
+
+    background:
+        rgba(255, 255, 255, 0.025);
+
+    color:
+        rgba(255, 255, 255, 0.82);
+
+    backdrop-filter:
+        blur(12px);
+
+    -webkit-backdrop-filter:
+        blur(12px);
+}
+
+.hero-button-secondary:hover {
+    transform:
+        translateY(-2px);
+
+    border-color:
+        rgba(0, 217, 255, 0.42);
+
+    background:
+        rgba(0, 217, 255, 0.06);
+
+    box-shadow:
+        0 0 24px
+        rgba(0, 217, 255, 0.10);
+}
+
+
+/* ============================================================
+   STATS
+   ============================================================ */
+
+.hero-stats {
+    display: flex;
+    align-items: stretch;
+
+    width: fit-content;
+
+    margin-top: 46px;
+}
+
+.hero-stat {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 92px;
+}
+
+.hero-stat strong {
+    color:
+        rgba(255, 255, 255, 0.94);
+
+    font-size: 22px;
+    font-weight: 700;
+
+    line-height: 1.1;
+}
+
+.hero-stat span {
+    margin-top: 7px;
+
+    color:
+        rgba(255, 255, 255, 0.40);
+
+    font-size: 10px;
+    font-weight: 600;
+
+    letter-spacing: 0.12em;
+
+    text-transform: uppercase;
+}
+
+.hero-stat-divider {
+    width: 1px;
+
+    margin:
+        0
+        24px;
+
+    background:
+        rgba(255, 255, 255, 0.10);
+}
+
+
+/* ============================================================
+   NETWORK AREA
+   ============================================================ */
+
+.hero-network {
+    position: relative;
+
+    width: 760px;
+    height: 650px;
+
+    justify-self: end;
+
+    overflow: visible;
+}
+
+
+/* ============================================================
+   SVG CONNECTION SYSTEM
+   ============================================================ */
+
+.hero-network-lines {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: visible;
+
+    pointer-events: none;
+}
+
+
+/* ============================================================
+   FLOW LINES
+   ============================================================ */
+
+.hero-flow-line {
+    fill: none;
+
+    stroke-width: 1.15;
+
+    stroke-dasharray: 5 7;
+
+    opacity: 0.52;
+}
+
+.hero-flow-line-gold {
+    stroke: #ffd34d;
+}
+
+.hero-flow-line-cyan {
+    stroke: #00d9ff;
+}
+
+.hero-flow-line-blue {
+    stroke: #4d9dff;
+}
+
+.hero-flow-line-pink {
+    stroke: #ff4fc3;
+}
+
+.hero-flow-line-violet {
+    stroke: #a66cff;
+}
+
+
+/* ============================================================
+   MOVING SQUARE PARTICLES
+   ============================================================ */
+
+.hero-flow-dot {
+    stroke: none;
+
+    opacity: 0.95;
+
+    filter:
+        drop-shadow(
+            0 0 7px
+            currentColor
+        );
+}
+
+.hero-flow-dot-gold {
+    fill: #ffd34d;
+    color: #ffd34d;
+}
+
+.hero-flow-dot-cyan {
+    fill: #00d9ff;
+    color: #00d9ff;
+}
+
+.hero-flow-dot-blue {
+    fill: #4d9dff;
+    color: #4d9dff;
+}
+
+.hero-flow-dot-pink {
+    fill: #ff4fc3;
+    color: #ff4fc3;
+}
+
+.hero-flow-dot-violet {
+    fill: #a66cff;
+    color: #a66cff;
+}
+
+
+/* ============================================================
+   STATIC NETWORK MARKERS
+   ============================================================ */
+
+.hero-network-marker {
+    width: 7px;
+    height: 7px;
+}
+
+.hero-network-marker-gold {
+    fill: #ffd34d;
+
+    filter:
+        drop-shadow(
+            0 0 7px
+            rgba(255, 211, 77, 0.80)
+        );
+}
+
+.hero-network-marker-cyan {
+    fill: #00d9ff;
+
+    filter:
+        drop-shadow(
+            0 0 7px
+            rgba(0, 217, 255, 0.80)
+        );
+}
+
+.hero-network-marker-blue {
+    fill: #4d9dff;
+
+    filter:
+        drop-shadow(
+            0 0 7px
+            rgba(77, 157, 255, 0.80)
+        );
+}
+
+.hero-network-marker-pink {
+    fill: #ff4fc3;
+
+    filter:
+        drop-shadow(
+            0 0 7px
+            rgba(255, 79, 195, 0.80)
+        );
+}
+
+.hero-network-marker-violet {
+    fill: #a66cff;
+
+    filter:
+        drop-shadow(
+            0 0 7px
+            rgba(166, 108, 255, 0.80)
+        );
+}
+
+
+/* ============================================================
+   SOLUTION CARDS
+   ============================================================ */
+
+.hero-solution-card {
+    position: absolute;
+
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    width: 190px;
+    min-height: 78px;
+
+    padding:
+        14px
+        16px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.11);
+
+    background:
+        rgba(4, 11, 25, 0.78);
+
+    box-shadow:
+        inset 0 1px 0
+        rgba(255, 255, 255, 0.035);
+
+    backdrop-filter:
+        blur(14px);
+
+    -webkit-backdrop-filter:
+        blur(14px);
+
+    transition:
+        border-color 300ms ease,
+        background 300ms ease,
+        box-shadow 300ms ease,
+        transform 300ms ease;
+}
+
+.hero-solution-card:hover {
+    background:
+        rgba(6, 15, 32, 0.90);
+
+    transform:
+        translateY(-3px);
+}
+
+
+/* ============================================================
+   CARD POSITIONS
+   ============================================================ */
+
+.hero-solution-card-idea {
+    left: 285px;
+    top: 51px;
+
+    width: 190px;
+}
+
+.hero-solution-card-website {
+    left: 20px;
+    top: 181px;
+
+    width: 190px;
+}
+
+.hero-solution-card-store {
+    left: 20px;
+    top: 366px;
+
+    width: 210px;
+}
+
+.hero-solution-card-business {
+    right: 20px;
+    top: 181px;
+
+    width: 210px;
+}
+
+.hero-solution-card-mobile {
+    right: 20px;
+    top: 366px;
+
+    width: 210px;
+}
+
+.hero-solution-card-custom {
+    left: 285px;
+    top: 505px;
+
+    width: 190px;
+}
+
+
+/* ============================================================
+   SOLUTION ICON
+   ============================================================ */
+
+.hero-solution-icon {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 38px;
+    height: 38px;
+
+    flex-shrink: 0;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.10);
+
+    background:
+        rgba(255, 255, 255, 0.025);
+
+    font-size: 0;
+}
+
+.hero-solution-icon svg {
+    width: 20px;
+    height: 20px;
+
+    fill: none;
+
+    stroke:
+        currentColor;
+
+    stroke-width: 1.5;
+
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.hero-solution-icon-gold {
+    color: #ffd34d;
+
+    border-color:
+        rgba(255, 211, 77, 0.22);
+
+    box-shadow:
+        0 0 18px
+        rgba(255, 211, 77, 0.07);
+}
+
+.hero-solution-icon-cyan {
+    color: #00d9ff;
+
+    border-color:
+        rgba(0, 217, 255, 0.22);
+
+    box-shadow:
+        0 0 18px
+        rgba(0, 217, 255, 0.07);
+}
+
+.hero-solution-icon-blue {
+    color: #4d9dff;
+
+    border-color:
+        rgba(77, 157, 255, 0.22);
+
+    box-shadow:
+        0 0 18px
+        rgba(77, 157, 255, 0.07);
+}
+
+.hero-solution-icon-pink {
+    color: #ff4fc3;
+
+    border-color:
+        rgba(255, 79, 195, 0.22);
+
+    box-shadow:
+        0 0 18px
+        rgba(255, 79, 195, 0.07);
+}
+
+.hero-solution-icon-violet {
+    color: #a66cff;
+
+    border-color:
+        rgba(166, 108, 255, 0.22);
+
+    box-shadow:
+        0 0 18px
+        rgba(166, 108, 255, 0.07);
+}
+
+
+/* ============================================================
+   CARD TEXT
+   ============================================================ */
+
+.hero-solution-copy {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.hero-solution-copy strong {
+    color:
+        rgba(255, 255, 255, 0.90);
+
+    font-size: 12px;
+    font-weight: 700;
+
+    letter-spacing: 0.04em;
+
+    text-transform: uppercase;
+
+    line-height: 1.25;
+}
+
+.hero-solution-copy span {
+    margin-top: 5px;
+
+    color:
+        rgba(224, 233, 247, 0.42);
+
+    font-size: 10px;
+
+    line-height: 1.45;
+}
+
+
+/* ============================================================
+   CENTRAL BIZZSOFT HUB
+   ============================================================ */
+
+.hero-network-core {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width: 150px;
+    height: 120px;
+
+    transform:
+        translate(
+            -50%,
+            -50%
+        );
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    border:
+        1px solid
+        rgba(0, 217, 255, 0.22);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(8, 20, 39, 0.94),
+            rgba(4, 9, 22, 0.90)
+        );
+
+    box-shadow:
+        0 0 30px
+        rgba(0, 217, 255, 0.07),
+        inset 0 1px 0
+        rgba(255, 255, 255, 0.04);
+}
+
+.hero-network-core::before {
+    content: "";
+
+    position: absolute;
+
+    inset: -7px;
+
+    border:
+        1px solid
+        rgba(0, 217, 255, 0.08);
+
+    pointer-events: none;
+}
+
+.hero-network-core-mark {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 28px;
+    height: 28px;
+
+    margin-bottom: 5px;
+
+    border:
+        1px solid
+        rgba(0, 217, 255, 0.34);
+
+    color: #ffffff;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    box-shadow:
+        0 0 16px
+        rgba(0, 217, 255, 0.12);
+}
+
+.hero-network-core > strong {
+    color:
+        rgba(255, 255, 255, 0.94);
+
+    font-size: 15px;
+    font-weight: 750;
+
+    letter-spacing: 0.08em;
+}
+
+.hero-network-core > strong span {
+    color: #00d9ff;
+}
+
+.hero-network-core > small {
+    margin-top: 7px;
+
+    color:
+        rgba(255, 255, 255, 0.34);
+
+    font-size: 7px;
+    font-weight: 700;
+
+    letter-spacing: 0.20em;
+
+    text-transform: uppercase;
+}
+
+
+ 
+
+
+/* ============================================================
+   BOTTOM LABEL
+   ============================================================ */
+
+.hero-bottom-label {
+    position: absolute;
+
+    left: 50%;
+    bottom: 28px;
+
+    z-index: 10;
+
+    transform:
+        translateX(-50%);
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    color:
+        rgba(255, 255, 255, 0.25);
+
+    font-size: 9px;
+    font-weight: 700;
+
+    letter-spacing: 0.20em;
+
+    text-transform: uppercase;
+
+    white-space: nowrap;
+}
+
+.hero-bottom-label i {
+    display: block;
+
+    width: 24px;
+    height: 1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #00d9ff,
+            #a66cff
+        );
+
+    opacity: 0.7;
+}
+
+
+/* ============================================================
+   TABLET
+   ============================================================ */
+
+@media (max-width: 1180px) {
+
+    .hero-container {
+        width:
+            calc(100% - 50px);
+
+        grid-template-columns:
+            minmax(0, 0.85fr)
+            minmax(500px, 1.15fr);
+
+        gap: 10px;
+    }
+
+    .hero-title {
+        font-size:
+            clamp(
+                48px,
+                5.5vw,
+                68px
+            );
+    }
+
+    .hero-network {
+        transform:
+            scale(0.86);
+
+        transform-origin:
+            center center;
+
+        margin-right: -45px;
+    }
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+/* ============================================================
+   MOBILE — RESPONSIVE NETWORK COMPOSITION
+   ============================================================ */
+
+@media (max-width: 767px) {
+
+    .hero {
+        min-height: auto;
+        overflow: hidden;
+    }
+
+    .hero-background-grid {
+        background-size: 46px 46px;
+        opacity: 0.24;
+    }
+
+    .hero-background-glow-one {
+        width: 320px;
+        height: 320px;
+        right: -180px;
+        top: 15%;
+        filter: blur(65px);
+    }
+
+    .hero-background-glow-two {
+        width: 300px;
+        height: 300px;
+        left: -130px;
+        bottom: 4%;
+        filter: blur(65px);
+    }
+
+    /* --------------------------------------------------------
+       MAIN CONTAINER
+       -------------------------------------------------------- */
+
+    .hero-container {
+        width: min(100%, 430px);
+        min-height: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+        padding: 100px 15px 70px;
+        box-sizing: border-box;
+    }
+
+    /* --------------------------------------------------------
+       CONTENT
+       -------------------------------------------------------- */
+
+    .hero-content {
+        width: 100%;
+        max-width: 430px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .hero-eyebrow {
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 18px;
+        font-size: 10px;
+        letter-spacing: 0.20em;
+    }
+
+    .hero-eyebrow-line {
+        width: 28px;
+    }
+
+    .hero-title {
+        width: 100%;
+        font-size: clamp(38px, 11.8vw, 54px);
+        line-height: 0.92;
+        letter-spacing: -0.065em;
+    }
+
+    .hero-title-accent {
+        margin-top: 5px;
+    }
+
+    .hero-description {
+        max-width: 360px;
+        margin-top: 22px;
+        font-size: 15px;
+        line-height: 1.62;
+    }
+
+    .hero-actions {
+        width: 100%;
+        max-width: 330px;
+        margin-top: 25px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .hero-button {
+        width: 100%;
+        min-height: 58px;
+    }
+
+    .hero-stats {
+        width: 100%;
+        max-width: 330px;
+        margin-top: 34px;
+        justify-content: center;
+    }
+
+    .hero-stat {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .hero-stat strong {
+        font-size: 19px;
+    }
+
+    .hero-stat span {
+        font-size: 8px;
+        letter-spacing: 0.08em;
+    }
+
+    .hero-stat-divider {
+        margin: 0 12px;
+    }
+
+    /* ========================================================
+       MOBILE NETWORK — FLUID CANVAS
+
+       The network itself follows the viewport width.
+       Cards are positioned against the actual connection
+       endpoints, so the lines remain attached as the screen
+       gets narrower.
+       ======================================================== */
+
+    .hero-network {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+        height: auto;
+        aspect-ratio: 760 / 650;
+        margin: 42px auto 0;
+        overflow: visible;
+        transform: none;
+        flex: 0 0 auto;
+    }
+
+    .hero-network-lines {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    /* Keep connection strokes visible on small screens. */
+
+    .hero-flow-line {
+        stroke-width: 1.8;
+        stroke-dasharray: 6 8;
+        opacity: 0.66;
+        vector-effect: non-scaling-stroke;
+    }
+
+    .hero-network-marker {
+        width: 6px;
+        height: 6px;
+    }
+
+    /* Moving particles remain visible and centered on the line. */
+
+    .hero-flow-dot {
+        width: 7px;
+        height: 7px;
+        opacity: 1;
+    }
+
+    /* --------------------------------------------------------
+       MOBILE CARD POSITIONS
+
+       These percentages are mapped directly from the original
+       760 × 650 coordinate system:
+
+       Idea      = 380 / 90
+       Website   = 115 / 220
+       Store     = 115 / 405
+       Business  = 645 / 220
+       Mobile    = 645 / 405
+       Custom    = 380 / 555
+       -------------------------------------------------------- */
+
+    .hero-solution-card {
+        box-sizing: border-box;
+        width: clamp(132px, 36%, 150px);
+        min-height: 60px;
+        padding: 9px 10px;
+        gap: 8px;
+        border-radius: 11px;
+        z-index: 5;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    .hero-solution-card-idea {
+        left: 50%;
+        top: 13.85%;
+        width: clamp(142px, 37%, 158px);
+        transform: translate(-50%, -50%);
+    }
+
+    .hero-solution-card-website {
+        left: 15.13%;
+        top: 33.85%;
+        transform: translate(-50%, -50%);
+    }
+
+    .hero-solution-card-store {
+        left: 15.13%;
+        top: 62.31%;
+        transform: translate(-50%, -50%);
+    }
+
+    .hero-solution-card-business {
+        left: 84.87%;
+        right: auto;
+        top: 33.85%;
+        transform: translate(-50%, -50%);
+    }
+
+    .hero-solution-card-mobile {
+        left: 84.87%;
+        right: auto;
+        top: 62.31%;
+        transform: translate(-50%, -50%);
+    }
+
+    .hero-solution-card-custom {
+        left: 50%;
+        top: 85.38%;
+        width: clamp(142px, 37%, 158px);
+        transform: translate(-50%, -50%);
+    }
+
+    /* --------------------------------------------------------
+       MOBILE ICONS
+       -------------------------------------------------------- */
+
+    .hero-solution-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        flex-shrink: 0;
+    }
+
+    .hero-solution-icon svg {
+        width: 17px;
+        height: 17px;
+        display: block;
+        fill: none !important;
+        stroke: currentColor !important;
+        stroke-width: 1.6;
+    }
+
+    /* --------------------------------------------------------
+       MOBILE CARD TEXT
+       -------------------------------------------------------- */
+
+    .hero-solution-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .hero-solution-copy strong {
+        font-size: 12px;
+        line-height: 1.20;
+        letter-spacing: 0.02em;
+    }
+
+    .hero-solution-copy span {
+        margin-top: 3px;
+        font-size: 9.5px;
+        line-height: 1.25;
+    }
+
+    /* --------------------------------------------------------
+       MOBILE CENTRAL HUB
+       -------------------------------------------------------- */
+
+    .hero-network-core {
+        width: clamp(108px, 28%, 122px);
+        height: clamp(88px, 23%, 102px);
+        z-index: 6;
+    }
+
+    .hero-network-core-mark {
+        width: 25px;
+        height: 25px;
+        margin-bottom: 4px;
+        font-size: 12px;
+    }
+
+    .hero-network-core > strong {
+        font-size: 13px;
+        letter-spacing: 0.06em;
+    }
+
+    .hero-network-core > small {
+        margin-top: 5px;
+        font-size: 6px;
+        letter-spacing: 0.14em;
+    }
+
+     
+
+    /* --------------------------------------------------------
+       BOTTOM LABEL
+       -------------------------------------------------------- */
+
+    .hero-bottom-label {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    transform: none;
+    width: 100%;
+    margin-top: 28px;
+    justify-content: center;
+    gap: 8px;
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    text-align: center;
+}
+
+    .hero-bottom-label i {
+        width: 20px;
+    }
+}
+
+
+/* ============================================================
+   SMALL MOBILE — 480px AND BELOW
+   ============================================================ */
+
+@media (max-width: 480px) {
+
+    .hero-container {
+        padding-top: 96px;
+        padding-bottom: 70px;
+    }
+
+    .hero-title {
+        font-size: clamp(37px, 11.8vw, 52px);
+    }
+
+    .hero-description {
+        max-width: 330px;
+        font-size: 14px;
+    }
+
+    .hero-actions {
+        max-width: 310px;
+    }
+
+    .hero-network {
+        width: 100%;
+        max-width: 400px;
+        margin-top: 38px;
+    }
+
+    .hero-solution-card {
+        min-height: 58px;
+        padding: 8px 9px;
+        gap: 7px;
+    }
+
+    .hero-solution-copy strong {
+        font-size: 11.5px;
+    }
+
+    .hero-solution-copy span {
+        font-size: 9px;
+    }
+
+     
+
+    .hero-bottom-label {
+        margin-top: 62px;
+        gap: 8px;
+        font-size: 7px;
+    }
+
+    .hero-bottom-label i {
+        width: 18px;
+    }
+}
+
+
+/* ============================================================
+   VERY SMALL MOBILE — 380px AND BELOW
+   ============================================================ */
+
+@media (max-width: 380px) {
+
+    .hero-container {
+        padding-top: 92px;
+    }
+
+    .hero-title {
+        font-size: 36px;
+    }
+
+    .hero-description {
+        max-width: 300px;
+        font-size: 13px;
+    }
+
+    .hero-stat strong {
+        font-size: 17px;
+    }
+
+    .hero-stat span {
+        font-size: 7px;
+    }
+
+    .hero-stat-divider {
+        margin: 0 9px;
+    }
+
+    .hero-network {
+        max-width: 350px;
+        margin-top: 36px;
+    }
+
+    .hero-solution-card {
+        min-height: 54px;
+        padding: 7px 8px;
+        gap: 6px;
+    }
+
+    .hero-solution-icon {
+        width: 27px;
+        height: 27px;
+        border-radius: 7px;
+    }
+
+    .hero-solution-icon svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .hero-solution-copy strong {
+        font-size: 10.5px;
+    }
+
+    .hero-solution-copy span {
+        font-size: 8.5px;
+    }
+
+    .hero-network-core {
+        width: 104px;
+        height: 84px;
+    }
+
+    .hero-network-core-mark {
+        width: 23px;
+        height: 23px;
+        font-size: 11px;
+    }
+
+    .hero-network-core > strong {
+        font-size: 12px;
+    }
+
+     
+}
+
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .hero-cursor {
+        animation: none;
+    }
+
+    .hero-flow-dot {
+        opacity: 0;
+    }
+
+    .hero-button,
+    .hero-button-arrow,
+    .hero-solution-card {
+        transition: none;
+    }
+}
+
+

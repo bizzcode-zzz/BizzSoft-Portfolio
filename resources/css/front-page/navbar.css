@@ -1,0 +1,437 @@
+/* ============================================================
+   NAVBAR — LOCKED DESIGN
+   ============================================================ */
+
+
+/* ============================================================
+   NAVBAR
+   ============================================================ */
+
+.navbar {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+
+    /* Same content edge as Hero */
+    padding:
+        18px
+        max(40px, calc((100% - 1400px) / 2));
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(2, 9, 20, 0.78),
+            rgba(2, 9, 20, 0.58)
+        );
+
+    border-bottom:
+        1px solid
+        rgba(0, 217, 255, 0.18);
+
+    border-radius:
+        0 0 42px 42px;
+
+    backdrop-filter:
+        blur(18px)
+        saturate(135%);
+
+    -webkit-backdrop-filter:
+        blur(18px)
+        saturate(135%);
+
+    box-shadow:
+        0 14px 40px
+        rgba(0, 0, 0, 0.18);
+
+    overflow: hidden;
+}
+
+
+/* ============================================================
+   GRADIENT BOTTOM EDGE
+   ============================================================ */
+
+.navbar::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    height: 1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(0, 217, 255, 0.8),
+            rgba(0, 217, 255, 0.15) 38%,
+            rgba(255, 79, 195, 0.15) 62%,
+            rgba(255, 79, 195, 0.8)
+        );
+
+    pointer-events: none;
+}
+
+
+/* ============================================================
+   LOGO
+   ------------------------------------------------------------
+   The logo is now a single PNG image.
+   This block controls only its Navbar placement.
+   ============================================================ */
+
+.navbar-logo {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+    align-items: center;
+
+    width: fit-content;
+    height: fit-content;
+
+    flex-shrink: 0;
+
+    text-decoration: none;
+
+    line-height: 0;
+
+    transition:
+        filter 300ms ease;
+}
+
+.navbar-logo-image {
+    display: block;
+
+    width: auto;
+    height: 62px;
+
+    max-width: none;
+
+    object-fit: contain;
+
+    flex-shrink: 0;
+
+    transform: translateX(-21px);
+}
+
+.navbar-logo:hover {
+    filter:
+        drop-shadow(
+            0 0 10px
+            rgba(0, 217, 255, 0.35)
+        );
+}
+
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+
+.navbar-links {
+    display: flex;
+    align-items: center;
+
+    gap: 38px;
+}
+
+.navbar-link {
+    position: relative;
+
+    padding: 9px 0;
+
+    color:
+        rgba(255, 255, 255, 0.72);
+
+    font-size: 14px;
+    font-weight: 500;
+
+    text-decoration: none;
+
+    transition:
+        color 300ms ease;
+}
+
+.navbar-link:hover {
+    color: #ffffff;
+}
+
+
+/* ============================================================
+   ACTIVE LINK
+   ============================================================ */
+
+.navbar-link-active {
+    color: #00d9ff;
+}
+
+.navbar-link-active::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    bottom: -3px;
+
+    height: 2px;
+
+    border-radius: 999px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #00d9ff,
+            #00bfff
+        );
+
+    box-shadow:
+        0 0 12px
+        rgba(0, 217, 255, 0.55);
+}
+
+
+/* ============================================================
+   LET'S TALK — NEON GRADIENT
+   ============================================================ */
+
+.navbar-cta {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    gap: 18px;
+
+    min-width: 204px;
+    height: 54px;
+
+    padding:
+        5px 6px 5px 28px;
+
+    border:
+        1px solid transparent;
+
+    border-radius: 999px;
+
+    background:
+        linear-gradient(
+            rgba(3, 10, 24, 0.88),
+            rgba(3, 10, 24, 0.88)
+        ) padding-box,
+
+        linear-gradient(
+            90deg,
+            #00d9ff 0%,
+            #4dcfff 30%,
+            #a66cff 58%,
+            #ff4fc3 100%
+        ) border-box;
+
+    color: #ffffff;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    letter-spacing: 0.04em;
+
+    text-decoration: none;
+
+    box-shadow:
+        0 0 8px
+        rgba(0, 217, 255, 0.35),
+
+        0 0 18px
+        rgba(166, 108, 255, 0.18),
+
+        0 0 24px
+        rgba(255, 79, 195, 0.18);
+
+    backdrop-filter:
+        blur(12px);
+
+    -webkit-backdrop-filter:
+        blur(12px);
+
+    transition:
+        box-shadow 300ms ease,
+        transform 300ms ease;
+}
+
+.navbar-cta:hover {
+    box-shadow:
+        0 0 10px
+        rgba(0, 217, 255, 0.55),
+
+        0 0 22px
+        rgba(166, 108, 255, 0.30),
+
+        0 0 32px
+        rgba(255, 79, 195, 0.28);
+
+    transform:
+        translateY(-1px);
+}
+
+
+/* ============================================================
+   CTA ARROW CIRCLE
+   ============================================================ */
+
+.navbar-cta-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 44px;
+    height: 44px;
+
+    margin-left: auto;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 79, 195, 0.16),
+            rgba(255, 79, 195, 0.28)
+        );
+
+    color: #ffffff;
+
+    font-size: 22px;
+    font-weight: 400;
+
+    box-shadow:
+        inset 0 0 20px
+        rgba(255, 79, 195, 0.08);
+
+    transition:
+        transform 300ms ease,
+        background 300ms ease;
+}
+
+.navbar-cta:hover .navbar-cta-arrow {
+    transform:
+        translateX(3px);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(0, 217, 255, 0.18),
+            rgba(255, 79, 195, 0.32)
+        );
+}
+
+
+/* ============================================================
+   MOBILE HAMBURGER
+   ------------------------------------------------------------
+   Hidden by default.
+   Only appears on mobile.
+   ============================================================ */
+
+.navbar-mobile-menu {
+    display: none;
+}
+
+
+/* ============================================================
+   TABLET
+   ============================================================ */
+
+@media (max-width: 1000px) {
+
+    .navbar {
+        padding-left: 5%;
+        padding-right: 5%;
+    }
+
+    .navbar-links {
+        gap: 24px;
+    }
+
+    .navbar-cta {
+        min-width: 145px;
+    }
+}
+
+
+/* ============================================================
+   MOBILE
+   ------------------------------------------------------------
+   Desktop layout remains untouched.
+   ============================================================ */
+
+@media (max-width: 767px) {
+
+    .navbar {
+        padding:
+            14px 20px;
+
+        border-radius:
+            0 0 28px 28px;
+    }
+
+    .navbar-logo-image {
+        height: 42px;
+        transform: translateX(-17px);
+    }
+
+    .navbar-links {
+        display: none;
+    }
+
+    /* Hide Let's Talk ONLY on mobile */
+    .navbar-cta {
+        display: none;
+    }
+
+
+    /* ========================================================
+       MOBILE HAMBURGER
+       ======================================================== */
+
+    .navbar-mobile-menu {
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        flex-direction: column;
+
+        gap: 5px;
+
+        width: 40px;
+        height: 40px;
+
+        padding: 0;
+
+        background: transparent;
+
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.18);
+
+        border-radius: 10px;
+
+        cursor: pointer;
+    }
+
+    .navbar-mobile-menu span {
+        display: block;
+
+        width: 18px;
+        height: 2px;
+
+        border-radius: 999px;
+
+        background: #ffffff;
+    }
+}

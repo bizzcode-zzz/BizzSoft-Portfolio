@@ -1,0 +1,347 @@
+.more-projects-section {
+    position: relative;
+    width: 100%;
+    padding: 28px 0 50px;
+    background: #020712;
+    overflow: visible;
+}
+
+.more-projects-container {
+    width: min(1400px, 90%);
+    margin: 0 auto;
+}
+
+.more-projects-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 60px;
+    padding: 34px 38px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 28px;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(8, 18, 38, 0.72),
+            rgba(10, 7, 28, 0.72)
+        );
+    box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.24),
+        0 0 40px rgba(0, 217, 255, 0.035);
+    backdrop-filter: blur(14px);
+}
+
+/* =========================================================
+   INTRO
+========================================================= */
+
+.more-projects-intro {
+    max-width: 560px;
+}
+
+.more-projects-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.more-projects-eyebrow::before {
+    content: '';
+    width: 26px;
+    height: 1px;
+    background:
+        linear-gradient(
+            90deg,
+            #00d9ff,
+            #a66cff
+        );
+    box-shadow:
+        0 0 8px rgba(0, 217, 255, 0.35);
+}
+
+.more-projects-description {
+    max-width: 500px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.56);
+    font-size: 14px;
+    line-height: 1.75;
+    letter-spacing: 0.01em;
+}
+
+/* =========================================================
+   SELECTOR
+========================================================= */
+
+.more-projects-selector {
+    position: relative;
+    width: 290px;
+    flex-shrink: 0;
+    z-index: 20;
+}
+
+.more-projects-trigger {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 60px;
+    padding: 0 9px 0 23px;
+    border: 1px solid rgba(0, 217, 255, 0.28);
+    border-radius: 999px;
+    background:
+        linear-gradient(
+            110deg,
+            rgba(4, 16, 34, 0.98),
+            rgba(13, 7, 34, 0.98)
+        );
+    color: rgba(255, 255, 255, 0.94);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.095em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow:
+        0 0 12px rgba(0, 217, 255, 0.08),
+        0 0 28px rgba(166, 108, 255, 0.06);
+    transition:
+        transform 350ms ease,
+        border-color 350ms ease,
+        box-shadow 350ms ease;
+}
+
+.more-projects-trigger:hover {
+    transform: translateY(-2px);
+    border-color: rgba(0, 217, 255, 0.52);
+    box-shadow:
+        0 0 18px rgba(0, 217, 255, 0.15),
+        0 0 34px rgba(166, 108, 255, 0.10);
+}
+
+.more-projects-trigger.is-open {
+    border-color: rgba(0, 217, 255, 0.55);
+    box-shadow:
+        0 0 18px rgba(0, 217, 255, 0.16),
+        0 0 38px rgba(166, 108, 255, 0.12);
+}
+
+/* =========================================================
+   TRIGGER ICON
+========================================================= */
+
+.more-projects-trigger-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(0, 217, 255, 0.17),
+            rgba(166, 108, 255, 0.23)
+        );
+    color: #ffffff;
+    box-shadow:
+        inset 0 0 12px rgba(255, 255, 255, 0.035);
+    transition:
+        transform 350ms ease,
+        background 350ms ease,
+        box-shadow 350ms ease;
+}
+
+.more-projects-trigger.is-open .more-projects-trigger-icon {
+    transform: rotate(180deg);
+    background:
+        linear-gradient(
+            135deg,
+            rgba(0, 217, 255, 0.27),
+            rgba(166, 108, 255, 0.33)
+        );
+    box-shadow:
+        0 0 14px rgba(0, 217, 255, 0.12);
+}
+
+.more-projects-chevron {
+    display: block;
+    margin-top: -3px;
+    font-size: 19px;
+    line-height: 1;
+}
+
+/* =========================================================
+   DROPDOWN
+========================================================= */
+
+.more-projects-dropdown {
+    position: absolute;
+    top: calc(100% + 11px);
+    right: 0;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid rgba(0, 217, 255, 0.20);
+    border-radius: 22px;
+    background:
+        linear-gradient(
+            145deg,
+            rgba(4, 12, 28, 0.985),
+            rgba(11, 6, 30, 0.985)
+        );
+    box-shadow:
+        0 22px 55px rgba(0, 0, 0, 0.46),
+        0 0 22px rgba(0, 217, 255, 0.09),
+        0 0 42px rgba(166, 108, 255, 0.07);
+    backdrop-filter: blur(18px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-10px) scale(0.975);
+    transform-origin: top right;
+    transition:
+        opacity 250ms ease,
+        visibility 250ms ease,
+        transform 250ms ease;
+}
+
+.more-projects-dropdown.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+/* =========================================================
+   OPTIONS
+========================================================= */
+
+.more-projects-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 54px;
+    padding: 0 15px 0 17px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 12px;
+    font-weight: 650;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        color 250ms ease,
+        background 250ms ease,
+        border-color 250ms ease,
+        transform 250ms ease;
+}
+
+.more-projects-option:hover {
+    color: #ffffff;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(0, 217, 255, 0.075),
+            rgba(166, 108, 255, 0.10)
+        );
+    border-color: rgba(0, 217, 255, 0.14);
+    transform: translateX(3px);
+}
+
+.more-projects-option-arrow {
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 18px;
+    line-height: 1;
+    transition:
+        color 250ms ease,
+        transform 250ms ease;
+}
+
+.more-projects-option:hover .more-projects-option-arrow {
+    color: #ffffff;
+    transform: translateX(4px);
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 767px) {
+    .more-projects-section {
+        padding: 12px 0 15px;
+    }
+
+    .more-projects-container {
+        width: 100%;
+        padding: 0 20px;
+    }
+
+    .more-projects-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 24px;
+        padding: 28px 20px;
+        border-radius: 24px;
+        text-align: center;
+    }
+
+    .more-projects-intro {
+        max-width: none;
+    }
+
+    .more-projects-eyebrow {
+        justify-content: center;
+        margin-bottom: 9px;
+        font-size: 10px;
+    }
+
+    .more-projects-eyebrow::before {
+        width: 20px;
+    }
+
+    .more-projects-description {
+        max-width: 320px;
+        margin: 0 auto;
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    .more-projects-selector {
+        width: 100%;
+    }
+
+    .more-projects-trigger {
+        min-height: 58px;
+        padding-left: 20px;
+        font-size: 11px;
+    }
+
+    .more-projects-trigger-icon {
+        width: 42px;
+        height: 42px;
+    }
+
+    .more-projects-dropdown {
+        top: calc(100% + 9px);
+        padding: 8px;
+        border-radius: 20px;
+    }
+
+    .more-projects-option {
+        min-height: 56px;
+        padding: 0 14px 0 16px;
+        border-radius: 13px;
+        font-size: 12px;
+    }
+}
