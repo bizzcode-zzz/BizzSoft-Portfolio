@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TicketStatus;
 use App\Models\Ticket;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Enums\TicketStatus;
 
 class TicketController extends Controller
 {
@@ -58,6 +58,22 @@ class TicketController extends Controller
         $ticket->load([
             'replies' => fn($query) => $query
                 ->with('user:id,name')
+                ->oldest(),
+
+            'secureAccesses' => fn($query) => $query
+                ->select([
+                    'id',
+                    'ticket_id',
+                    'created_by',
+                    'direction',
+                    'type',
+                    'label',
+                    'status',
+                    'submitted_at',
+                    'viewed_at',
+                    'closed_at',
+                    'created_at',
+                ])
                 ->oldest(),
         ]);
 

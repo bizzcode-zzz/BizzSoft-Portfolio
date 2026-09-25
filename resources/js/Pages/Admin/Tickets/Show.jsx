@@ -1,5 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
+import SecureAccessPanel from './SecureAccessPanel';
 
 export default function Show({ ticket }) {
     const {
@@ -157,7 +158,8 @@ export default function Show({ ticket }) {
                                 {canResolve && (
                                     <div>
                                         <p className="text-sm text-gray-400">
-                                            Mark this ticket as resolved when the support issue has been solved.
+                                            Mark this ticket as resolved when
+                                            the support issue has been solved.
                                         </p>
 
                                         <button
@@ -176,7 +178,8 @@ export default function Show({ ticket }) {
                                 {isResolved && (
                                     <div>
                                         <p className="text-sm text-gray-400">
-                                            This ticket is resolved. Close it when no further action is required.
+                                            This ticket is resolved. Close it
+                                            when no further action is required.
                                         </p>
 
                                         <button
@@ -207,7 +210,8 @@ export default function Show({ ticket }) {
                                 </p>
 
                                 <p className="mt-2 text-sm text-gray-400">
-                                    Closed tickets are read-only and cannot receive new replies.
+                                    Closed tickets are read-only and cannot
+                                    receive new replies.
                                 </p>
                             </div>
                         ) : (
@@ -228,7 +232,10 @@ export default function Show({ ticket }) {
                                         rows="6"
                                         value={data.message}
                                         onChange={(event) =>
-                                            setData('message', event.target.value)
+                                            setData(
+                                                'message',
+                                                event.target.value,
+                                            )
                                         }
                                         className="w-full rounded-lg border border-gray-700 bg-gray-950 px-4 py-3"
                                         placeholder="Write a reply to the customer..."
@@ -246,11 +253,18 @@ export default function Show({ ticket }) {
                                     disabled={processing}
                                     className="mt-4 rounded-lg bg-white px-5 py-3 font-semibold text-black disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    {processing ? 'Sending...' : 'Send Reply'}
+                                    {processing
+                                        ? 'Sending...'
+                                        : 'Send Reply'}
                                 </button>
                             </form>
                         )}
                     </div>
+
+                    <SecureAccessPanel
+                        ticketId={ticket.id}
+                        secureAccesses={ticket.secure_accesses ?? []}
+                    />
                 </div>
             </AdminLayout>
         </>

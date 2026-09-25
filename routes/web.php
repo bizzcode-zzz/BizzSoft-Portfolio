@@ -11,6 +11,10 @@ use App\Http\Controllers\Admin\CustomizationSecureAccessHandoffController;
 use App\Http\Controllers\Admin\CustomizationSecureAccessRevealController;
 use App\Http\Controllers\Admin\TicketController as AdminTicketController;
 use App\Http\Controllers\Admin\TicketReplyController as AdminTicketReplyController;
+use App\Http\Controllers\Admin\TicketSecureAccessCloseController as AdminTicketSecureAccessCloseController;
+use App\Http\Controllers\Admin\TicketSecureAccessController as AdminTicketSecureAccessController;
+use App\Http\Controllers\Admin\TicketSecureAccessHandoffController as AdminTicketSecureAccessHandoffController;
+use App\Http\Controllers\Admin\TicketSecureAccessRevealController as AdminTicketSecureAccessRevealController;
 use App\Http\Controllers\Admin\TicketStatusController as AdminTicketStatusController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -24,6 +28,8 @@ use App\Http\Controllers\CustomizationSecureAccessRevealController as CustomerCu
 use App\Http\Controllers\CustomizationSecureAccessSubmissionController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketReplyController;
+use App\Http\Controllers\TicketSecureAccessRevealController;
+use App\Http\Controllers\TicketSecureAccessSubmissionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -80,6 +86,20 @@ Route::middleware('auth')->group(function () {
             [TicketReplyController::class, 'store']
         )
             ->name('tickets.replies.store');
+
+        Route::post(
+            '/tickets/{ticket}/secure-access/{secureAccess}/submit',
+            [TicketSecureAccessSubmissionController::class, 'store']
+        )
+            ->scopeBindings()
+            ->name('tickets.secure-access.submit');
+
+        Route::get(
+            '/tickets/{ticket}/secure-access/{secureAccess}/reveal',
+            [TicketSecureAccessRevealController::class, 'show']
+        )
+            ->scopeBindings()
+            ->name('tickets.secure-access.reveal');
     });
 
     /*
@@ -227,6 +247,32 @@ Route::middleware('auth')->group(function () {
                 [AdminTicketStatusController::class, 'close']
             )
                 ->name('tickets.close');
+
+            Route::post(
+                '/tickets/{ticket}/secure-access',
+                [AdminTicketSecureAccessController::class, 'store']
+            )
+                ->name('tickets.secure-access.store');
+
+            Route::post(
+                '/tickets/{ticket}/secure-access/handoff',
+                [AdminTicketSecureAccessHandoffController::class, 'store']
+            )
+                ->name('tickets.secure-access.handoff');
+
+            Route::get(
+                '/tickets/{ticket}/secure-access/{secureAccess}/reveal',
+                [AdminTicketSecureAccessRevealController::class, 'show']
+            )
+                ->scopeBindings()
+                ->name('tickets.secure-access.reveal');
+
+            Route::patch(
+                '/tickets/{ticket}/secure-access/{secureAccess}/close',
+                [AdminTicketSecureAccessCloseController::class, 'close']
+            )
+                ->scopeBindings()
+                ->name('tickets.secure-access.close');
 
             /*
             |--------------------------------------------------------------------------

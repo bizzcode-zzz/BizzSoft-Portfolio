@@ -1,5 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import CustomerLayout from '../../../Layouts/CustomerLayout';
+import SecureAccessPanel from './SecureAccessPanel';
 
 export default function Show({ ticket }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -67,6 +68,11 @@ export default function Show({ ticket }) {
                         </div>
                     </div>
 
+                    <SecureAccessPanel
+                        ticketId={ticket.id}
+                        secureAccesses={ticket.secure_accesses ?? []}
+                    />
+
                     <div className="mt-8">
                         <h2 className="text-xl font-semibold">
                             Conversation
@@ -112,7 +118,8 @@ export default function Show({ ticket }) {
                                 </p>
 
                                 <p className="mt-2 text-sm text-gray-400">
-                                    Closed tickets are read-only. Please create a new ticket if you need further assistance.
+                                    Closed tickets are read-only. Please create
+                                    a new ticket if you need further assistance.
                                 </p>
                             </div>
                         ) : (
@@ -133,7 +140,10 @@ export default function Show({ ticket }) {
                                         rows="6"
                                         value={data.message}
                                         onChange={(event) =>
-                                            setData('message', event.target.value)
+                                            setData(
+                                                'message',
+                                                event.target.value,
+                                            )
                                         }
                                         className="w-full rounded-lg border border-gray-700 bg-gray-950 px-4 py-3"
                                         placeholder="Write a follow-up..."
@@ -151,7 +161,9 @@ export default function Show({ ticket }) {
                                     disabled={processing}
                                     className="mt-4 rounded-lg bg-white px-5 py-3 font-semibold text-black disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    {processing ? 'Sending...' : 'Send Reply'}
+                                    {processing
+                                        ? 'Sending...'
+                                        : 'Send Reply'}
                                 </button>
                             </form>
                         )}

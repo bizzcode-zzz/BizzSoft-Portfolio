@@ -30,8 +30,25 @@ class TicketController extends Controller
 
         $ticket->load([
             'user:id,name,email',
+
             'replies' => fn ($query) => $query
                 ->with('user:id,name,email')
+                ->oldest(),
+
+            'secureAccesses' => fn ($query) => $query
+                ->select([
+                    'id',
+                    'ticket_id',
+                    'created_by',
+                    'direction',
+                    'type',
+                    'label',
+                    'status',
+                    'submitted_at',
+                    'viewed_at',
+                    'closed_at',
+                    'created_at',
+                ])
                 ->oldest(),
         ]);
 

@@ -37,4 +37,9 @@ class Ticket extends Model
     {
         return $this->hasMany(TicketReply::class);
     }
+
+    public function secureAccesses(): HasMany
+    {
+        return $this->hasMany(TicketSecureAccess::class);
+    }
 }
