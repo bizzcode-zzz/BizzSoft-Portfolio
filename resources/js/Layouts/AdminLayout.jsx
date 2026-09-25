@@ -1,6 +1,11 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 
 export default function AdminLayout({ children }) {
+    const { adminUnread = {} } = usePage().props;
+
+    const unreadTickets = adminUnread.tickets ?? 0;
+    const unreadCustomizations = adminUnread.customizations ?? 0;
+
     const logout = () => {
         router.post('/logout');
     };
@@ -29,16 +34,28 @@ export default function AdminLayout({ children }) {
 
                         <Link
                             href="/admin/tickets"
-                            className="block rounded-lg px-4 py-3 font-medium text-gray-300 transition hover:bg-gray-800 hover:text-white"
+                            className="flex items-center justify-between rounded-lg px-4 py-3 font-medium text-gray-300 transition hover:bg-gray-800 hover:text-white"
                         >
-                            Support Tickets
+                            <span>Support Tickets</span>
+
+                            {unreadTickets > 0 && (
+                                <span className="min-w-6 rounded-full bg-red-500 px-2 py-0.5 text-center text-xs font-bold text-white">
+                                    {unreadTickets}
+                                </span>
+                            )}
                         </Link>
 
                         <Link
                             href="/admin/customizations"
-                            className="block rounded-lg px-4 py-3 font-medium text-gray-300 transition hover:bg-gray-800 hover:text-white"
+                            className="flex items-center justify-between rounded-lg px-4 py-3 font-medium text-gray-300 transition hover:bg-gray-800 hover:text-white"
                         >
-                            Customization Requests
+                            <span>Customization Requests</span>
+
+                            {unreadCustomizations > 0 && (
+                                <span className="min-w-6 rounded-full bg-red-500 px-2 py-0.5 text-center text-xs font-bold text-white">
+                                    {unreadCustomizations}
+                                </span>
+                            )}
                         </Link>
 
                         <div className="px-4 py-3 text-gray-500">

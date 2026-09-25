@@ -80,6 +80,17 @@ export default function Index({ tickets }) {
                                                 <h2 className="mt-1 text-lg font-semibold">
                                                     {ticket.subject}
                                                 </h2>
+
+                                                {ticket.unread_messages_count > 0 && (
+                                                    <p className="mt-2 text-sm font-medium text-red-400">
+                                                        {ticket.unread_messages_count}{' '}
+                                                        new{' '}
+                                                        {ticket.unread_messages_count ===
+                                                        1
+                                                            ? 'message'
+                                                            : 'messages'}
+                                                    </p>
+                                                )}
                                             </div>
 
                                             <span

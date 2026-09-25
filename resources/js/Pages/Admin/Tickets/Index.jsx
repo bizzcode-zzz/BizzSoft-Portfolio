@@ -76,15 +76,27 @@ export default function Index({ tickets }) {
                                                 </div>
                                             </div>
 
-                                            <span
-                                                className={`rounded-full border px-3 py-1 text-sm font-medium ${
-                                                    statusColors[ticket.status] ??
-                                                    'border-gray-700 bg-gray-800 text-gray-300'
-                                                }`}
-                                            >
-                                                {statusLabels[ticket.status] ??
-                                                    ticket.status}
-                                            </span>
+                                            <div className="shrink-0 text-right">
+                                                <span
+                                                    className={`inline-flex rounded-full border px-3 py-1 text-sm font-medium ${
+                                                        statusColors[ticket.status] ??
+                                                        'border-gray-700 bg-gray-800 text-gray-300'
+                                                    }`}
+                                                >
+                                                    {statusLabels[ticket.status] ??
+                                                        ticket.status}
+                                                </span>
+
+                                                {ticket.unread_messages_count > 0 && (
+                                                    <p className="mt-2 text-sm font-medium text-red-400">
+                                                        {ticket.unread_messages_count}{' '}
+                                                        new{' '}
+                                                        {ticket.unread_messages_count === 1
+                                                            ? 'message'
+                                                            : 'messages'}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
                                     </Link>
                                 ))}

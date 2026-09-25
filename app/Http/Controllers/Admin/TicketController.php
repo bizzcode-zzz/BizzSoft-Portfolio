@@ -16,6 +16,15 @@ class TicketController extends Controller
 
         $tickets = Ticket::query()
             ->with('user:id,name,email')
+            ->withCount([
+                'replies as unread_messages_count' => function ($query) {
+                    $query
+                        ->whereNull('read_at')
+                        ->whereHas('user.roles', function ($query) {
+                            $query->where('name', 'customer');
+                        });
+                },
+            ])
             ->latest()
             ->get();
 
@@ -27,6 +36,15 @@ class TicketController extends Controller
     public function show(Ticket $ticket): Response
     {
         $this->authorize('view', $ticket);
+
+        $ticket->replies()
+            ->whereNull('read_at')
+            ->whereHas('user.roles', function ($query) {
+                $query->where('name', 'customer');
+            })
+            ->update([
+                'read_at' => now(),
+            ]);
 
         $ticket->load([
             'user:id,name,email',

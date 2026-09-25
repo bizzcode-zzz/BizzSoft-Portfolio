@@ -18,6 +18,8 @@ use App\Http\Controllers\Admin\TicketSecureAccessRevealController as AdminTicket
 use App\Http\Controllers\Admin\TicketStatusController as AdminTicketStatusController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\CustomerDashboardController;
 use App\Http\Controllers\CustomizationCancellationController;
 use App\Http\Controllers\CustomizationConversationController;
 use App\Http\Controllers\CustomizationQuoteDecisionController;
@@ -56,9 +58,7 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/dashboard', function () {
-        return Inertia::render('Customer/Dashboard');
-    })
+    Route::get('/dashboard', CustomerDashboardController::class)
         ->middleware('role:customer')
         ->name('dashboard');
 
@@ -196,9 +196,7 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/admin/dashboard', function () {
-        return Inertia::render('Admin/Dashboard');
-    })
+    Route::get('/admin/dashboard', AdminDashboardController::class)
         ->middleware('role:admin')
         ->name('admin.dashboard');
 

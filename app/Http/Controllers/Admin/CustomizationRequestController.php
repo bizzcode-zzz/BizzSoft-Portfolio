@@ -15,6 +15,15 @@ class CustomizationRequestController extends Controller
 
         $customizationRequests = CustomizationRequest::query()
             ->with('user:id,name,email')
+            ->withCount([
+                'messages as unread_messages_count' => function ($query) {
+                    $query
+                        ->whereNull('read_at')
+                        ->whereHas('user.roles', function ($query) {
+                            $query->where('name', 'customer');
+                        });
+                },
+            ])
             ->latest('created_at')
             ->latest('id')
             ->get();
@@ -28,8 +37,18 @@ class CustomizationRequestController extends Controller
     {
         $this->authorize('view', $customizationRequest);
 
+        $customizationRequest->messages()
+            ->whereNull('read_at')
+            ->whereHas('user.roles', function ($query) {
+                $query->where('name', 'customer');
+            })
+            ->update([
+                'read_at' => now(),
+            ]);
+
         $customizationRequest->load([
             'user:id,name,email',
+
             'messages' => fn ($query) => $query
                 ->with('user:id,name,email')
                 ->oldest('created_at')

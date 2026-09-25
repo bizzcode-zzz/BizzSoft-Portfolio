@@ -24,19 +24,25 @@ function statusClasses(status) {
     const classes = {
         submitted: 'bg-blue-500/10 text-blue-300 ring-blue-500/20',
         under_review: 'bg-amber-500/10 text-amber-300 ring-amber-500/20',
-        needs_information: 'bg-orange-500/10 text-orange-300 ring-orange-500/20',
+        needs_information:
+            'bg-orange-500/10 text-orange-300 ring-orange-500/20',
         quote_sent: 'bg-violet-500/10 text-violet-300 ring-violet-500/20',
         quote_declined: 'bg-red-500/10 text-red-300 ring-red-500/20',
         accepted: 'bg-emerald-500/10 text-emerald-300 ring-emerald-500/20',
         in_progress: 'bg-indigo-500/10 text-indigo-300 ring-indigo-500/20',
         ready_for_review: 'bg-cyan-500/10 text-cyan-300 ring-cyan-500/20',
-        revision_requested: 'bg-orange-500/10 text-orange-300 ring-orange-500/20',
-        completed: 'bg-emerald-500/10 text-emerald-300 ring-emerald-500/20',
+        revision_requested:
+            'bg-orange-500/10 text-orange-300 ring-orange-500/20',
+        completed:
+            'bg-emerald-500/10 text-emerald-300 ring-emerald-500/20',
         request_declined: 'bg-red-500/10 text-red-300 ring-red-500/20',
         cancelled: 'bg-gray-500/10 text-gray-300 ring-gray-500/20',
     };
 
-    return classes[status] ?? 'bg-gray-500/10 text-gray-300 ring-gray-500/20';
+    return (
+        classes[status] ??
+        'bg-gray-500/10 text-gray-300 ring-gray-500/20'
+    );
 }
 
 export default function Index({ customizationRequests }) {
@@ -108,8 +114,20 @@ export default function Index({ customizationRequests }) {
                                             </p>
                                         </div>
 
-                                        <div className="shrink-0 text-sm font-medium text-gray-300">
-                                            Review request →
+                                        <div className="shrink-0 text-right">
+                                            <div className="text-sm font-medium text-gray-300">
+                                                Review request →
+                                            </div>
+
+                                            {request.unread_messages_count > 0 && (
+                                                <p className="mt-2 text-sm font-medium text-red-400">
+                                                    {request.unread_messages_count}{' '}
+                                                    new{' '}
+                                                    {request.unread_messages_count === 1
+                                                        ? 'message'
+                                                        : 'messages'}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                 </Link>

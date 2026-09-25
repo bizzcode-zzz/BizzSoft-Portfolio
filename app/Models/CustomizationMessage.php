@@ -12,11 +12,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'customization_request_id',
     'user_id',
     'message',
+    'read_at',
 ])]
 class CustomizationMessage extends Model
 {
     /** @use HasFactory<CustomizationMessageFactory> */
     use HasFactory;
+
+    protected function casts(): array
+    {
+        return [
+            'read_at' => 'datetime',
+        ];
+    }
 
     public function customizationRequest(): BelongsTo
     {

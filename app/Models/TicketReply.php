@@ -16,7 +16,15 @@ class TicketReply extends Model
         'ticket_id',
         'user_id',
         'message',
+        'read_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'read_at' => 'datetime',
+        ];
+    }
 
     public function ticket(): BelongsTo
     {

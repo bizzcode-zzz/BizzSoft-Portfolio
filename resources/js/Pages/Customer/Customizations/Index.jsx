@@ -128,10 +128,24 @@ export default function Index({ customizationRequests }) {
                                             <p className="mt-1 line-clamp-2 text-sm leading-6 text-gray-400">
                                                 {request.description}
                                             </p>
+
+                                             
                                         </div>
 
-                                        <div className="shrink-0 text-sm font-medium text-gray-400 transition group-hover:text-white">
-                                            View request →
+                                        <div className="shrink-0 text-right">
+                                            <div className="text-sm font-medium text-gray-400 transition group-hover:text-white">
+                                                View request →
+                                            </div>
+
+                                            {request.unread_messages_count > 0 && (
+                                                <p className="mt-2 text-sm font-medium text-red-400">
+                                                    {request.unread_messages_count}{' '}
+                                                    new{' '}
+                                                    {request.unread_messages_count === 1
+                                                        ? 'message'
+                                                        : 'messages'}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                 </Link>
