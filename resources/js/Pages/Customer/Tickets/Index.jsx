@@ -9,6 +9,17 @@ export default function Index({ tickets }) {
         closed: 'Closed',
     };
 
+    const statusColors = {
+        waiting_for_admin:
+            'border-amber-500/30 bg-amber-500/10 text-amber-300',
+        waiting_for_customer:
+            'border-blue-500/30 bg-blue-500/10 text-blue-300',
+        resolved:
+            'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
+        closed:
+            'border-gray-600 bg-gray-800 text-gray-300',
+    };
+
     return (
         <>
             <Head title="Support Tickets" />
@@ -71,8 +82,14 @@ export default function Index({ tickets }) {
                                                 </h2>
                                             </div>
 
-                                            <span className="rounded-full border border-gray-700 px-3 py-1 text-sm text-gray-300">
-                                                {statusLabels[ticket.status] ?? ticket.status}
+                                            <span
+                                                className={`rounded-full border px-3 py-1 text-sm font-medium ${
+                                                    statusColors[ticket.status] ??
+                                                    'border-gray-700 bg-gray-800 text-gray-300'
+                                                }`}
+                                            >
+                                                {statusLabels[ticket.status] ??
+                                                    ticket.status}
                                             </span>
                                         </div>
                                     </Link>
