@@ -1,8 +1,26 @@
-import { Head, Link } from '@inertiajs/react';
+import {
+    Head,
+    Link,
+    router,
+    usePage,
+} from '@inertiajs/react';
+import { useState } from 'react';
 import Footer from '../../Components/Footer';
 import AppLayout from '../../Layouts/AppLayout';
 
 export default function Show({ product }) {
+    const { auth = {} } = usePage().props;
+    const [ordering, setOrdering] = useState(false);
+
+    const user = auth?.user ?? null;
+
+    const roles = Array.isArray(user?.roles)
+        ? user.roles
+        : [];
+
+    const isCustomer = roles.includes('customer');
+    const isAdmin = roles.includes('admin');
+
     const formatPrice = (price) => {
         return new Intl.NumberFormat('en-PH', {
             style: 'currency',
@@ -56,6 +74,60 @@ export default function Show({ product }) {
     const includedItems = Array.isArray(product.included_items)
         ? product.included_items.filter(Boolean)
         : [];
+
+    const handleOrder = () => {
+        if (ordering) {
+            return;
+        }
+
+        if (!user) {
+            router.visit('/login');
+            return;
+        }
+
+        if (!isCustomer) {
+            return;
+        }
+
+        router.post(
+            `/products/${product.slug}/orders`,
+            {},
+            {
+                preserveScroll: true,
+
+                onStart: () => {
+                    setOrdering(true);
+                },
+
+                onFinish: () => {
+                    setOrdering(false);
+                },
+            },
+        );
+    };
+
+    const orderLabel = () => {
+        if (ordering) {
+            return 'Creating Order...';
+        }
+
+        if (!user) {
+            return 'Login to Order';
+        }
+
+        if (isCustomer) {
+            return 'Buy / Order';
+        }
+
+        if (isAdmin) {
+            return 'Customer Account Required';
+        }
+
+        return 'Customer Account Required';
+    };
+
+    const orderDisabled =
+        ordering || (user !== null && !isCustomer);
 
     return (
         <AppLayout>
@@ -178,10 +250,15 @@ export default function Show({ product }) {
 
                                     <button
                                         type="button"
-                                        disabled
-                                        className="w-full cursor-not-allowed rounded-xl border border-slate-700 bg-slate-950 px-5 py-3 text-sm font-semibold text-slate-500"
+                                        onClick={handleOrder}
+                                        disabled={orderDisabled}
+                                        className={`w-full rounded-xl px-5 py-3 text-sm font-semibold transition ${
+                                            orderDisabled
+                                                ? 'cursor-not-allowed border border-slate-700 bg-slate-950 text-slate-500'
+                                                : 'bg-emerald-600 text-white hover:bg-emerald-500'
+                                        }`}
                                     >
-                                        Buy / Order — Coming Soon
+                                        {orderLabel()}
                                     </button>
                                 </div>
                             </section>
@@ -312,10 +389,21 @@ export default function Show({ product }) {
 
                         <button
                             type="button"
-                            disabled
-                            className="min-h-11 cursor-not-allowed rounded-xl border border-slate-700 bg-slate-900 px-3 text-xs font-semibold text-slate-500"
+                            onClick={handleOrder}
+                            disabled={orderDisabled}
+                            className={`min-h-11 rounded-xl px-3 text-xs font-semibold transition ${
+                                orderDisabled
+                                    ? 'cursor-not-allowed border border-slate-700 bg-slate-900 text-slate-500'
+                                    : 'bg-emerald-600 text-white hover:bg-emerald-500'
+                            }`}
                         >
-                            Buy / Order Soon
+                            {ordering
+                                ? 'Creating...'
+                                : !user
+                                  ? 'Login to Order'
+                                  : isCustomer
+                                    ? 'Buy / Order'
+                                    : 'Customer Only'}
                         </button>
                     </div>
                 </div>

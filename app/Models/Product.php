@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ProductStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
@@ -34,6 +35,11 @@ class Product extends Model
             'status' => ProductStatus::class,
             'included_items' => 'array',
         ];
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
     }
 
     public function getRouteKeyName(): string

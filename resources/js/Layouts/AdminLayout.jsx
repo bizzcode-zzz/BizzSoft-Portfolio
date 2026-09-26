@@ -65,9 +65,12 @@ export default function AdminLayout({ children }) {
                             Scripts / Products
                         </Link>
 
-                        <div className="px-4 py-3 text-gray-500">
+                        <Link
+                            href="/admin/orders"
+                            className="block rounded-lg px-4 py-3 font-medium text-gray-300 transition hover:bg-gray-800 hover:text-white"
+                        >
                             Orders
-                        </div>
+                        </Link>
 
                         <div className="px-4 py-3 text-gray-500">
                             Users

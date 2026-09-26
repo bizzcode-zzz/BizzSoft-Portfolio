@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\CustomizationSecureAccessCloseController;
 use App\Http\Controllers\Admin\CustomizationSecureAccessController as AdminCustomizationSecureAccessController;
 use App\Http\Controllers\Admin\CustomizationSecureAccessHandoffController;
 use App\Http\Controllers\Admin\CustomizationSecureAccessRevealController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\TicketController as AdminTicketController;
 use App\Http\Controllers\Admin\TicketReplyController as AdminTicketReplyController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\Admin\TicketStatusController as AdminTicketStatusContro
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\Http\Controllers\CustomerDashboardController;
 use App\Http\Controllers\CustomizationCancellationController;
 use App\Http\Controllers\CustomizationConversationController;
@@ -75,6 +77,32 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', CustomerDashboardController::class)
         ->middleware('role:customer')
         ->name('dashboard');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Customer Orders
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('role:customer')->group(function () {
+        Route::get(
+            '/orders',
+            [CustomerOrderController::class, 'index']
+        )
+            ->name('customer.orders.index');
+
+        Route::post(
+            '/products/{product}/orders',
+            [CustomerOrderController::class, 'store']
+        )
+            ->name('customer.orders.store');
+
+        Route::get(
+            '/orders/{order}',
+            [CustomerOrderController::class, 'show']
+        )
+            ->name('customer.orders.show');
+    });
 
     /*
     |--------------------------------------------------------------------------
@@ -383,6 +411,30 @@ Route::middleware('auth')->group(function () {
                 [CustomizationDevelopmentController::class, 'resume']
             )
                 ->name('customizations.resume-development');
+
+            /*
+            |--------------------------------------------------------------------------
+            | Admin Orders
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get(
+                '/orders',
+                [AdminOrderController::class, 'index']
+            )
+                ->name('orders.index');
+
+            Route::get(
+                '/orders/{order}',
+                [AdminOrderController::class, 'show']
+            )
+                ->name('orders.show');
+
+            Route::patch(
+                '/orders/{order}/status',
+                [AdminOrderController::class, 'updateStatus']
+            )
+                ->name('orders.status.update');
 
             /*
             |--------------------------------------------------------------------------

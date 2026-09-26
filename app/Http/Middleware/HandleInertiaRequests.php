@@ -80,6 +80,20 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
 
+            'auth' => [
+                'user' => $user
+                    ? [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'roles' => $user
+                            ->getRoleNames()
+                            ->values()
+                            ->all(),
+                    ]
+                    : null,
+            ],
+
             'customerUnread' => [
                 'tickets' => $customerUnreadTickets,
                 'customizations' => $customerUnreadCustomizations,
