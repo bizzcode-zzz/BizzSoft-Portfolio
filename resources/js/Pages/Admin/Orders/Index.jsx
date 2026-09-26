@@ -77,7 +77,7 @@ export default function Index({ orders }) {
                     </div>
                 ) : (
                     <div className="overflow-x-auto rounded-xl border border-gray-800 bg-gray-900">
-                        <table className="w-full min-w-[980px] table-fixed text-left">
+                        <table className="w-full min-w-245 table-fixed text-left">
                             <colgroup>
                                 <col className="w-[22%]" />
                                 <col className="w-[18%]" />
