@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\CustomizationSecureAccessCloseController;
 use App\Http\Controllers\Admin\CustomizationSecureAccessController as AdminCustomizationSecureAccessController;
 use App\Http\Controllers\Admin\CustomizationSecureAccessHandoffController;
 use App\Http\Controllers\Admin\CustomizationSecureAccessRevealController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\TicketController as AdminTicketController;
 use App\Http\Controllers\Admin\TicketReplyController as AdminTicketReplyController;
 use App\Http\Controllers\Admin\TicketSecureAccessCloseController as AdminTicketSecureAccessCloseController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\CustomizationRequestReplyController;
 use App\Http\Controllers\CustomizationReviewController;
 use App\Http\Controllers\CustomizationSecureAccessRevealController as CustomerCustomizationSecureAccessRevealController;
 use App\Http\Controllers\CustomizationSecureAccessSubmissionController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketReplyController;
 use App\Http\Controllers\TicketSecureAccessRevealController;
@@ -38,6 +40,18 @@ use Inertia\Inertia;
 Route::get('/', function () {
     return Inertia::render('Home');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Public Products
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/products', [ProductController::class, 'index'])
+    ->name('products.index');
+
+Route::get('/products/{product}', [ProductController::class, 'show'])
+    ->name('products.show');
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisteredUserController::class, 'create'])
@@ -369,6 +383,18 @@ Route::middleware('auth')->group(function () {
                 [CustomizationDevelopmentController::class, 'resume']
             )
                 ->name('customizations.resume-development');
+
+            /*
+            |--------------------------------------------------------------------------
+            | Admin Products
+            |--------------------------------------------------------------------------
+            */
+
+            Route::resource(
+                'products',
+                AdminProductController::class
+            )
+                ->except(['destroy']);
         });
 
     /*
