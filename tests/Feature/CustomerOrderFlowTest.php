@@ -61,7 +61,7 @@ class CustomerOrderFlowTest extends TestCase
         );
 
         $this->assertSame(
-            OrderStatus::Pending,
+            OrderStatus::AwaitingPayment,
             $order->status
         );
 
@@ -83,7 +83,7 @@ class CustomerOrderFlowTest extends TestCase
         $existingOrder = $this->createOrder(
             customer: $customer,
             product: $product,
-            status: OrderStatus::Pending
+            status: OrderStatus::AwaitingPayment
         );
 
         $response = $this
@@ -100,8 +100,31 @@ class CustomerOrderFlowTest extends TestCase
             'id' => $existingOrder->id,
             'user_id' => $customer->id,
             'product_id' => $product->id,
-            'status' => OrderStatus::Pending->value,
+            'status' => OrderStatus::AwaitingPayment->value,
         ]);
+    }
+
+    public function test_customer_with_existing_pending_order_is_redirected_to_existing_order(): void
+    {
+        $customer = $this->createCustomer();
+
+        $product = $this->createProduct();
+
+        $existingOrder = $this->createOrder(
+            customer: $customer,
+            product: $product,
+            status: OrderStatus::Pending
+        );
+
+        $response = $this
+            ->actingAs($customer)
+            ->post(route('customer.orders.store', $product));
+
+        $response->assertRedirect(
+            route('customer.orders.show', $existingOrder)
+        );
+
+        $this->assertDatabaseCount('orders', 1);
     }
 
     public function test_customer_can_order_again_after_previous_order_is_cancelled(): void
@@ -131,7 +154,7 @@ class CustomerOrderFlowTest extends TestCase
         $this->assertDatabaseCount('orders', 2);
 
         $this->assertSame(
-            OrderStatus::Pending,
+            OrderStatus::AwaitingPayment,
             $newOrder->status
         );
     }
@@ -237,7 +260,7 @@ class CustomerOrderFlowTest extends TestCase
     private function createOrder(
         User $customer,
         Product $product,
-        OrderStatus $status = OrderStatus::Pending
+        OrderStatus $status = OrderStatus::AwaitingPayment
     ): Order {
         static $counter = 1;
 

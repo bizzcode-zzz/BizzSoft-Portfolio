@@ -36,6 +36,8 @@ export default function Show({ order }) {
         ? `v${String(order.product_version).replace(/^v/i, '')}`
         : '—';
 
+    const canPay = ['pending', 'awaiting_payment'].includes(order.status);
+
     return (
         <CustomerLayout>
             <Head title={`Order ${order.order_number}`} />
@@ -64,14 +66,25 @@ export default function Show({ order }) {
                             </p>
                         </div>
 
-                        <span
-                            className={`inline-flex w-fit rounded-full border px-3 py-1.5 text-sm font-semibold ${
-                                statusClasses[order.status] ??
-                                'border-gray-700 bg-gray-800 text-gray-300'
-                            }`}
-                        >
-                            {order.status_label}
-                        </span>
+                        <div className="flex flex-col items-start gap-3 sm:items-end">
+                            <span
+                                className={`inline-flex w-fit rounded-full border px-3 py-1.5 text-sm font-semibold ${
+                                    statusClasses[order.status] ??
+                                    'border-gray-700 bg-gray-800 text-gray-300'
+                                }`}
+                            >
+                                {order.status_label}
+                            </span>
+
+                            {canPay && (
+                                <Link
+                                    href={`/orders/${order.id}/payment`}
+                                    className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500"
+                                >
+                                    Pay Now
+                                </Link>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -126,25 +139,38 @@ export default function Show({ order }) {
                                 </p>
 
                                 <p className="mt-1 text-sm leading-6 text-gray-400">
-                                    Your product order has been recorded and is
-                                    waiting for the next step.
+                                    Your product order has been recorded
+                                    successfully.
                                 </p>
                             </div>
                         </div>
 
                         <div className="flex gap-4">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-800 text-sm font-bold text-gray-500">
+                            <div
+                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                                    canPay
+                                        ? 'bg-blue-500/10 text-blue-400'
+                                        : 'bg-gray-800 text-gray-500'
+                                }`}
+                            >
                                 2
                             </div>
 
                             <div>
-                                <p className="font-medium text-gray-300">
+                                <p
+                                    className={
+                                        canPay
+                                            ? 'font-medium text-white'
+                                            : 'font-medium text-gray-300'
+                                    }
+                                >
                                     Payment
                                 </p>
 
                                 <p className="mt-1 text-sm leading-6 text-gray-500">
-                                    Payment instructions and verification will
-                                    be handled separately.
+                                    {canPay
+                                        ? 'Your order is awaiting payment. Use Pay Now to continue.'
+                                        : 'Payment processing and verification are handled separately.'}
                                 </p>
                             </div>
                         </div>
@@ -184,8 +210,8 @@ export default function Show({ order }) {
                 <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-5">
                     <p className="text-sm leading-6 text-gray-300">
                         Creating an order does not mean the product is paid for
-                        or owned yet. Payment verification and secure delivery
-                        will be handled in later steps.
+                        or owned yet. Payment must be verified before product
+                        ownership and secure delivery are granted.
                     </p>
                 </div>
             </div>

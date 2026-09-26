@@ -50,4 +50,17 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class);
     }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function verifiedPayments(): HasMany
+    {
+        return $this->hasMany(
+            Payment::class,
+            'verified_by',
+        );
+    }
 }

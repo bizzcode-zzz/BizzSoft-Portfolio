@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\CustomizationRequestStatus;
+use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\CustomizationRequest;
 use Illuminate\Http\RedirectResponse;
@@ -20,10 +21,23 @@ class CustomizationDevelopmentController extends Controller
             'Only accepted customization requests can start development.'
         );
 
+        $quote = $customizationRequest->quote()->first();
+
         abort_unless(
-            $customizationRequest->quote()->exists(),
+            $quote,
             422,
             'A quotation is required before development can start.'
+        );
+
+        $verifiedAmount = $quote
+            ->payments()
+            ->where('status', PaymentStatus::Verified->value)
+            ->sum('amount');
+
+        abort_unless(
+            (float) $verifiedAmount >= (float) $quote->price,
+            422,
+            'The quotation must be fully paid before development can start.'
         );
 
         $customizationRequest->update([

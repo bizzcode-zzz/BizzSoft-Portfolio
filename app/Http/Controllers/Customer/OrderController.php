@@ -71,7 +71,7 @@ class OrderController extends Controller
             'product_version_snapshot' => $product->version,
             'price_snapshot' => $product->price,
 
-            'status' => OrderStatus::Pending,
+            'status' => OrderStatus::AwaitingPayment,
             'ordered_at' => now(),
         ]);
 

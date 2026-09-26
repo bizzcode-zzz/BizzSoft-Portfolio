@@ -22,6 +22,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
+use App\Http\Controllers\Customer\PaymentController as CustomerPaymentController;
 use App\Http\Controllers\CustomerDashboardController;
 use App\Http\Controllers\CustomizationCancellationController;
 use App\Http\Controllers\CustomizationConversationController;
@@ -102,6 +103,12 @@ Route::middleware('auth')->group(function () {
             [CustomerOrderController::class, 'show']
         )
             ->name('customer.orders.show');
+
+        Route::get(
+            '/orders/{order}/payment',
+            [CustomerPaymentController::class, 'showOrder']
+        )
+            ->name('customer.orders.payment.show');
     });
 
     /*
