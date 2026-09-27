@@ -1,4 +1,5 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 import CustomerLayout from '../../../Layouts/CustomerLayout';
 
 const paymentStatusClasses = {
@@ -15,10 +16,13 @@ export default function Order({
     order,
     verified_amount,
     remaining_amount,
+    checkout_provider,
     payments,
 }) {
-    const formatPrice = (amount, currency = 'PHP') => {
-        return new Intl.NumberFormat('en-PH', {
+    const [startingCheckout, setStartingCheckout] = useState(false);
+
+    const formatPrice = (amount, currency = 'USD') => {
+        return new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency,
             minimumFractionDigits: 2,
@@ -27,7 +31,7 @@ export default function Order({
 
     const formatDate = (date) => {
         if (!date) {
-            return '‚Äî';
+            return 'ó';
         }
 
         return new Intl.DateTimeFormat('en-PH', {
@@ -39,9 +43,34 @@ export default function Order({
         }).format(new Date(date));
     };
 
+    const startCheckout = () => {
+        if (startingCheckout) {
+            return;
+        }
+
+        router.post(
+            `/orders/${order.id}/payment/checkout`,
+            {},
+            {
+                preserveScroll: true,
+                onStart: () => {
+                    setStartingCheckout(true);
+                },
+                onFinish: () => {
+                    setStartingCheckout(false);
+                },
+            },
+        );
+    };
+
     const version = order.product_version
         ? `v${String(order.product_version).replace(/^v/i, '')}`
-        : '‚Äî';
+        : 'ó';
+
+    const providerLabel =
+        checkout_provider === 'paddle'
+            ? 'Paddle'
+            : checkout_provider ?? 'Payment Provider';
 
     return (
         <CustomerLayout>
@@ -53,7 +82,7 @@ export default function Order({
                         href={`/orders/${order.id}`}
                         className="text-sm font-medium text-gray-400 transition hover:text-white"
                     >
-                        ‚Üê Back to Order
+                        ? Back to Order
                     </Link>
 
                     <div className="mt-5">
@@ -128,24 +157,47 @@ export default function Order({
                         </h2>
 
                         <p className="mt-2 text-sm leading-6 text-gray-400">
-                            Available payment providers will appear here. We
-                            will connect card gateways, manual payment options,
-                            and future crypto providers to this shared payment
-                            page.
+                            Continue to our secure global checkout. Your order
+                            will only be considered paid after the payment
+                            provider confirms the transaction.
                         </p>
                     </div>
 
-                    <div className="mt-5 rounded-lg border border-dashed border-gray-700 bg-gray-950 p-5">
-                        <p className="font-medium text-gray-200">
-                            Payment gateway setup in progress
-                        </p>
+                    <div className="mt-5 rounded-xl border border-gray-800 bg-gray-950 p-5">
+                        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <p className="font-semibold text-white">
+                                    Pay with {providerLabel}
+                                </p>
 
-                        <p className="mt-2 text-sm leading-6 text-gray-500">
-                            No payment will be marked successful from this page
-                            until the selected provider confirms the
-                            transaction.
-                        </p>
+                                <p className="mt-1 text-sm leading-6 text-gray-500">
+                                    Secure checkout for your remaining balance
+                                    of {formatPrice(remaining_amount)}.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={startCheckout}
+                                disabled={startingCheckout}
+                                className={`inline-flex shrink-0 items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold text-white transition ${
+                                    startingCheckout
+                                        ? 'cursor-not-allowed bg-blue-800 opacity-70'
+                                        : 'bg-blue-600 hover:bg-blue-500'
+                                }`}
+                            >
+                                {startingCheckout
+                                    ? 'Starting Checkout...'
+                                    : `Pay with ${providerLabel}`}
+                            </button>
+                        </div>
                     </div>
+
+                    <p className="mt-4 text-xs leading-5 text-gray-500">
+                        You will be transferred to the selected provider's
+                        secure checkout. Returning from checkout does not by
+                        itself mark the payment as successful.
+                    </p>
                 </section>
 
                 {payments.length > 0 && (
@@ -166,9 +218,9 @@ export default function Order({
                                         </p>
 
                                         <p className="mt-1 text-sm text-gray-400">
-                                            {payment.provider ?? '‚Äî'}
+                                            {payment.provider ?? 'ó'}
                                             {payment.method
-                                                ? ` ¬∑ ${payment.method}`
+                                                ? ` ∑ ${payment.method}`
                                                 : ''}
                                         </p>
 
@@ -204,9 +256,10 @@ export default function Order({
 
                 <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-5">
                     <p className="text-sm leading-6 text-gray-300">
-                        Opening this payment page does not mean your order is
-                        paid. Payment is only considered verified after the
-                        payment provider or an authorized admin confirms it.
+                        Opening checkout does not mean your order is paid.
+                        Payment is only considered verified after the payment
+                        provider confirms it through our server-side payment
+                        verification flow.
                     </p>
                 </div>
             </div>

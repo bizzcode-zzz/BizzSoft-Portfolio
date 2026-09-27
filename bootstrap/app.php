@@ -18,6 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
         ]);
 
+        $middleware->validateCsrfTokens(
+            except: [
+                'webhooks/paddle',
+            ],
+        );
+
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,

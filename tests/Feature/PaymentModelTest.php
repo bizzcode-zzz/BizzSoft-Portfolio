@@ -26,7 +26,7 @@ class PaymentModelTest extends TestCase
             'slug' => 'bizzsoft-v5',
             'short_description' => 'Business management software.',
             'description' => 'BizzSoft product test record.',
-            'price' => 20000,
+            'price' => 349,
             'status' => ProductStatus::Active,
             'version' => '5',
         ]);
@@ -45,11 +45,10 @@ class PaymentModelTest extends TestCase
         $payment = $order->payments()->create([
             'payment_number' => 'PAY-TEST-001',
             'user_id' => $customer->id,
-            'amount' => '20000.00',
-            'currency' => 'PHP',
+            'amount' => '349.00',
             'provider' => 'manual',
-            'method' => 'gcash',
-            'reference_number' => 'GCASH-123456',
+            'method' => 'bank_transfer',
+            'reference_number' => 'WIRE-123456',
             'status' => PaymentStatus::Verified,
             'metadata' => [
                 'source' => 'customer_submission',
@@ -79,12 +78,12 @@ class PaymentModelTest extends TestCase
         );
 
         $this->assertSame(
-            '20000.00',
+            '349.00',
             $payment->amount
         );
 
         $this->assertSame(
-            'PHP',
+            'USD',
             $payment->currency
         );
 
@@ -94,7 +93,7 @@ class PaymentModelTest extends TestCase
         );
 
         $this->assertSame(
-            'gcash',
+            'bank_transfer',
             $payment->method
         );
 
@@ -151,11 +150,11 @@ class PaymentModelTest extends TestCase
             'payable_type' => Order::class,
             'payable_id' => $order->id,
             'user_id' => $customer->id,
-            'amount' => '20000.00',
-            'currency' => 'PHP',
+            'amount' => '349.00',
+            'currency' => 'USD',
             'provider' => 'manual',
-            'method' => 'gcash',
-            'reference_number' => 'GCASH-123456',
+            'method' => 'bank_transfer',
+            'reference_number' => 'WIRE-123456',
             'status' => PaymentStatus::Verified->value,
             'verified_by' => $admin->id,
         ]);
@@ -166,7 +165,7 @@ class PaymentModelTest extends TestCase
         $customer = User::factory()->create();
 
         $quote = CustomizationQuote::factory()->create([
-            'price' => '35000.00',
+            'price' => '599.00',
             'scope' => 'Custom inventory and reporting module.',
         ]);
 
@@ -174,7 +173,7 @@ class PaymentModelTest extends TestCase
             'payment_number' => 'PAY-QUOTE-TEST-001',
             'user_id' => $customer->id,
             'amount' => $quote->price,
-            'currency' => 'PHP',
+            'currency' => 'USD',
             'provider' => 'card_gateway',
             'method' => 'card',
             'provider_payment_id' => 'gateway_test_quote_001',
@@ -208,8 +207,13 @@ class PaymentModelTest extends TestCase
         );
 
         $this->assertSame(
-            '35000.00',
+            '599.00',
             $payment->amount
+        );
+
+        $this->assertSame(
+            'USD',
+            $payment->currency
         );
 
         $this->assertSame(
@@ -258,8 +262,8 @@ class PaymentModelTest extends TestCase
             'payable_type' => CustomizationQuote::class,
             'payable_id' => $quote->id,
             'user_id' => $customer->id,
-            'amount' => '35000.00',
-            'currency' => 'PHP',
+            'amount' => '599.00',
+            'currency' => 'USD',
             'provider' => 'card_gateway',
             'method' => 'card',
             'provider_payment_id' => 'gateway_test_quote_001',

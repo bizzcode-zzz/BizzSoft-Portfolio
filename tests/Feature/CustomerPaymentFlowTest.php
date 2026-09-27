@@ -40,13 +40,13 @@ class CustomerPaymentFlowTest extends TestCase
                 ->where('order.id', $order->id)
                 ->where('order.order_number', $order->order_number)
                 ->where('order.product_name', 'BizzSoft V5')
-                ->where('order.price', '20000.00')
+                ->where('order.price', '349.00')
                 ->where(
                     'order.status',
                     OrderStatus::AwaitingPayment->value
                 )
                 ->where('verified_amount', '0.00')
-                ->where('remaining_amount', '20000.00')
+                ->where('remaining_amount', '349.00')
                 ->has('payments', 0)
         );
     }
@@ -151,8 +151,8 @@ class CustomerPaymentFlowTest extends TestCase
         $order->payments()->create([
             'payment_number' => 'PAY-FULL-001',
             'user_id' => $customer->id,
-            'amount' => '20000.00',
-            'currency' => 'PHP',
+            'amount' => '349.00',
+            'currency' => 'USD',
             'provider' => 'card_gateway',
             'method' => 'card',
             'status' => PaymentStatus::Verified,
@@ -179,8 +179,8 @@ class CustomerPaymentFlowTest extends TestCase
         $order->payments()->create([
             'payment_number' => 'PAY-PARTIAL-001',
             'user_id' => $customer->id,
-            'amount' => '5000.00',
-            'currency' => 'PHP',
+            'amount' => '100.00',
+            'currency' => 'USD',
             'provider' => 'manual',
             'method' => 'bank_transfer',
             'status' => PaymentStatus::Verified,
@@ -197,8 +197,8 @@ class CustomerPaymentFlowTest extends TestCase
         $response->assertInertia(
             fn (Assert $page) => $page
                 ->component('Customer/Payments/Order')
-                ->where('verified_amount', '5000.00')
-                ->where('remaining_amount', '15000.00')
+                ->where('verified_amount', '100.00')
+                ->where('remaining_amount', '249.00')
                 ->has('payments', 1)
                 ->where(
                     'payments.0.status',
@@ -225,7 +225,7 @@ class CustomerPaymentFlowTest extends TestCase
             'slug' => 'bizzsoft-v5',
             'short_description' => 'Business management software.',
             'description' => 'BizzSoft product test record.',
-            'price' => 20000,
+            'price' => 349,
             'status' => ProductStatus::Active,
             'version' => '5',
         ]);

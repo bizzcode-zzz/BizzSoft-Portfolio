@@ -37,6 +37,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketReplyController;
 use App\Http\Controllers\TicketSecureAccessRevealController;
 use App\Http\Controllers\TicketSecureAccessSubmissionController;
+use App\Http\Controllers\Webhooks\PaddleWebhookController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -68,6 +69,11 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 });
 
+
+Route::post(
+    '/webhooks/paddle',
+    PaddleWebhookController::class
+)->name('webhooks.paddle');
 Route::middleware('auth')->group(function () {
     /*
     |--------------------------------------------------------------------------
@@ -109,6 +115,12 @@ Route::middleware('auth')->group(function () {
             [CustomerPaymentController::class, 'showOrder']
         )
             ->name('customer.orders.payment.show');
+
+        Route::post(
+            '/orders/{order}/payment/checkout',
+            [CustomerPaymentController::class, 'createOrderCheckout']
+        )
+            ->name('customer.orders.payment.checkout');
     });
 
     /*
@@ -482,3 +494,7 @@ Route::middleware('auth')->group(function () {
     )
         ->name('logout');
 });
+
+
+Route::view('/paddle/checkout', 'paddle.checkout')
+    ->name('paddle.checkout');
