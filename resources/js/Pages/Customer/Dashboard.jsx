@@ -24,7 +24,7 @@ export default function Dashboard({
                     <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         <div className="rounded-xl border border-dashed border-gray-700 bg-gray-900 p-5">
                             <div className="flex items-center gap-2">
-                                <span className="text-lg">ðŸ’³</span>
+                                <span className="text-lg">&#128179;</span>
 
                                 <h2 className="font-semibold text-gray-200">
                                     Account Balance
@@ -51,7 +51,7 @@ export default function Dashboard({
 
                         <div className="rounded-xl border border-dashed border-gray-700 bg-gray-900 p-5">
                             <div className="flex items-center gap-2">
-                                <span className="text-lg">ðŸ“„</span>
+                                <span className="text-lg">&#128196;</span>
 
                                 <h2 className="font-semibold text-gray-200">
                                     Invoice
@@ -71,14 +71,14 @@ export default function Dashboard({
                                     type="button"
                                     className="text-sm font-medium text-amber-400 transition hover:text-amber-300"
                                 >
-                                    View Invoice â†’
+                                    View Invoice &#8594;
                                 </button>
                             </div>
                         </div>
 
                         <div className="rounded-xl border border-dashed border-gray-700 bg-gray-900 p-5">
                             <div className="flex items-center gap-2">
-                                <span className="text-lg">ðŸŽ§</span>
+                                <span className="text-lg">&#127911;</span>
 
                                 <h2 className="font-semibold text-gray-200">
                                     Active Support Tickets
@@ -110,14 +110,14 @@ export default function Dashboard({
                                     href="/tickets"
                                     className="text-sm font-medium text-blue-400 transition hover:text-blue-300"
                                 >
-                                    View Tickets â†’
+                                    View Tickets &#8594;
                                 </Link>
                             </div>
                         </div>
 
                         <div className="rounded-xl border border-dashed border-gray-700 bg-gray-900 p-5">
                             <div className="flex items-center gap-2">
-                                <span className="text-lg">âš™ï¸</span>
+                                <span className="text-lg">&#9881;</span>
 
                                 <h2 className="font-semibold text-gray-200">
                                     Active Customizations
@@ -149,7 +149,7 @@ export default function Dashboard({
                                     href="/customizations"
                                     className="text-sm font-medium text-purple-400 transition hover:text-purple-300"
                                 >
-                                    View Requests â†’
+                                    View Requests &#8594;
                                 </Link>
                             </div>
                         </div>
