@@ -42,6 +42,16 @@ class Product extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function ownerships(): HasMany
+    {
+        return $this->hasMany(ProductOwnership::class);
+    }
+
+    public function releases(): HasMany
+    {
+        return $this->hasMany(ProductRelease::class);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

@@ -92,8 +92,38 @@ class ProductController extends Controller
 
     public function show(Product $product): Response
     {
+        $product->load([
+            'releases' => fn ($query) => $query
+                ->with('creator:id,name,email')
+                ->latest(),
+        ]);
+
         return Inertia::render('Admin/Products/Show', [
-            'product' => $this->productData($product),
+            'product' => [
+                ...$this->productData($product),
+
+                'releases' => $product->releases
+                    ->map(fn ($release) => [
+                        'id' => $release->id,
+                        'version' => $release->version,
+                        'original_name' => $release->original_name,
+                        'file_size' => $release->file_size,
+                        'sha256' => $release->sha256,
+                        'status' => $release->status->value,
+                        'released_at' => $release->released_at,
+                        'created_at' => $release->created_at,
+
+                        'creator' => $release->creator
+                            ? [
+                                'id' => $release->creator->id,
+                                'name' => $release->creator->name,
+                                'email' => $release->creator->email,
+                            ]
+                            : null,
+                    ])
+                    ->values()
+                    ->all(),
+            ],
         ]);
     }
 

@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
 
 function statusLabel(status) {
@@ -27,11 +27,66 @@ function statusClasses(status) {
 function formatCurrency(value) {
     return new Intl.NumberFormat('en-PH', {
         style: 'currency',
-        currency: 'PHP',
+        currency: 'USD',
     }).format(Number(value ?? 0));
 }
 
+function releaseStatusLabel(status) {
+    const labels = {
+        draft: 'Draft',
+        published: 'Published',
+        retired: 'Retired',
+    };
+
+    return labels[status] ?? status;
+}
+
+function releaseStatusClasses(status) {
+    const classes = {
+        draft: 'bg-amber-500/10 text-amber-300 ring-amber-500/20',
+        published: 'bg-emerald-500/10 text-emerald-300 ring-emerald-500/20',
+        retired: 'bg-gray-500/10 text-gray-300 ring-gray-500/20',
+    };
+
+    return (
+        classes[status] ??
+        'bg-gray-500/10 text-gray-300 ring-gray-500/20'
+    );
+}
+
+function formatFileSize(bytes) {
+    const size = Number(bytes ?? 0);
+
+    if (size < 1024) {
+        return `${size} B`;
+    }
+
+    if (size < 1024 * 1024) {
+        return `${(size / 1024).toFixed(1)} KB`;
+    }
+
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
 export default function Show({ product }) {
+    const { data, setData, post, processing, errors, reset } = useForm({
+        version: '',
+        release_file: null,
+    });
+
+    function submitRelease(event) {
+        event.preventDefault();
+
+        const form = event.currentTarget;
+
+        post(`/admin/products/${product.slug}/releases`, {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                reset();
+                form.reset();
+            },
+        });
+    }
     return (
         <AdminLayout>
             <Head title={product.name} />
@@ -69,7 +124,7 @@ export default function Show({ product }) {
                             href="/admin/products"
                             className="inline-flex items-center justify-center rounded-lg border border-gray-700 px-4 py-2.5 text-sm font-semibold text-gray-300 transition hover:bg-gray-800 hover:text-white"
                         >
-                            ← Products
+                            Back to Products
                         </Link>
 
                         <Link
@@ -93,7 +148,7 @@ export default function Show({ product }) {
                                     />
                                 ) : (
                                     <div className="py-16 text-center">
-                                        <div className="text-5xl">📦</div>
+                                        <div className="text-5xl">&#128230;</div>
 
                                         <p className="mt-3 text-sm text-gray-500">
                                             No product thumbnail
@@ -204,7 +259,7 @@ export default function Show({ product }) {
                                         rel="noreferrer"
                                         className="mt-5 inline-flex w-full items-center justify-center rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2.5 text-sm font-semibold text-blue-300 transition hover:bg-blue-500/20"
                                     >
-                                        Open Live Demo ↗
+                                        Open Live Demo
                                     </a>
                                 </>
                             ) : (
@@ -214,15 +269,177 @@ export default function Show({ product }) {
                             )}
                         </div>
 
-                        <div className="rounded-xl border border-dashed border-gray-700 bg-gray-900 p-6">
-                            <h2 className="font-semibold text-white">
-                                Product Release
-                            </h2>
+                        <div className="rounded-xl border border-gray-800 bg-gray-900 p-6">
+                            <div>
+                                <h2 className="font-semibold text-white">
+                                    Product Releases
+                                </h2>
 
-                            <p className="mt-3 text-sm leading-6 text-gray-500">
-                                Downloadable release files will be managed in
-                                the Product Releases module later.
-                            </p>
+                                <p className="mt-2 text-sm leading-6 text-gray-500">
+                                    Upload private ZIP packages for this product.
+                                    New uploads remain drafts until published.
+                                </p>
+                            </div>
+
+                            <form
+                                onSubmit={submitRelease}
+                                className="mt-6 space-y-4"
+                            >
+                                <div>
+                                    <label
+                                        htmlFor="release-version"
+                                        className="text-sm font-medium text-gray-300"
+                                    >
+                                        Release Version
+                                    </label>
+
+                                    <input
+                                        id="release-version"
+                                        type="text"
+                                        value={data.version}
+                                        onChange={(event) =>
+                                            setData(
+                                                'version',
+                                                event.target.value,
+                                            )
+                                        }
+                                        placeholder="5.0.1"
+                                        className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2.5 text-sm text-white outline-none transition focus:border-blue-500"
+                                    />
+
+                                    {errors.version && (
+                                        <p className="mt-2 text-sm text-red-400">
+                                            {errors.version}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="release-file"
+                                        className="text-sm font-medium text-gray-300"
+                                    >
+                                        ZIP Package
+                                    </label>
+
+                                    <input
+                                        id="release-file"
+                                        type="file"
+                                        accept=".zip,application/zip"
+                                        onChange={(event) =>
+                                            setData(
+                                                'release_file',
+                                                event.target.files?.[0] ??
+                                                    null,
+                                            )
+                                        }
+                                        className="mt-2 block w-full text-sm text-gray-400 file:mr-4 file:rounded-lg file:border-0 file:bg-gray-800 file:px-4 file:py-2.5 file:font-semibold file:text-gray-200 hover:file:bg-gray-700"
+                                    />
+
+                                    {errors.release_file && (
+                                        <p className="mt-2 text-sm text-red-400">
+                                            {errors.release_file}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    {processing
+                                        ? 'Uploading...'
+                                        : 'Upload Draft Release'}
+                                </button>
+                            </form>
+
+                            <div className="mt-8 border-t border-gray-800 pt-6">
+                                <h3 className="text-sm font-semibold text-gray-200">
+                                    Existing Releases
+                                </h3>
+
+                                {product.releases?.length > 0 ? (
+                                    <div className="mt-4 space-y-3">
+                                        {product.releases.map((release) => (
+                                            <div
+                                                key={release.id}
+                                                className="rounded-lg border border-gray-800 bg-gray-950 p-4"
+                                            >
+                                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                                    <div>
+                                                        <p className="font-semibold text-white">
+                                                            v{release.version}
+                                                        </p>
+
+                                                        <p className="mt-1 break-all text-sm text-gray-500">
+                                                            {
+                                                                release.original_name
+                                                            }
+                                                        </p>
+                                                    </div>
+
+                                                    <span
+                                                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${releaseStatusClasses(
+                                                            release.status,
+                                                        )}`}
+                                                    >
+                                                        {releaseStatusLabel(
+                                                            release.status,
+                                                        )}
+                                                    </span>
+                                                </div>
+
+                                                <div className="mt-4 space-y-1 text-xs text-gray-500">
+                                                    <p>
+                                                        Size:{' '}
+                                                        {formatFileSize(
+                                                            release.file_size,
+                                                        )}
+                                                    </p>
+
+                                                    <p>
+                                                        Uploaded by:{' '}
+                                                        {release.creator?.email ??
+                                                            'Unknown'}
+                                                    </p>
+                                                </div>
+
+                                                {release.status === 'draft' && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (
+                                                                !window.confirm(
+                                                                    'Publish v' + release.version + '? Once published, this release becomes eligible for customer delivery.',
+                                                                )
+                                                            ) {
+                                                                return;
+                                                            }
+
+                                                            router.patch(
+                                                                `/admin/products/${product.slug}/releases/${release.id}/publish`,
+                                                                {},
+                                                                {
+                                                                    preserveScroll: true,
+                                                                },
+                                                            );
+                                                        }}
+                                                        className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500"
+                                                    >
+                                                        Publish Release
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="mt-4 text-sm leading-6 text-gray-500">
+                                        No product releases have been uploaded
+                                        yet.
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

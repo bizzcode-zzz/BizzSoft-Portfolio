@@ -11,16 +11,16 @@ const statusClasses = {
 
 export default function Show({ order }) {
     const formatPrice = (price) => {
-        return new Intl.NumberFormat('en-PH', {
+        return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'PHP',
+            currency: 'USD',
             minimumFractionDigits: 2,
         }).format(Number(price ?? 0));
     };
 
     const formatDate = (date) => {
         if (!date) {
-            return '—';
+            return '-';
         }
 
         return new Intl.DateTimeFormat('en-PH', {
@@ -34,7 +34,7 @@ export default function Show({ order }) {
 
     const version = order.product_version
         ? `v${String(order.product_version).replace(/^v/i, '')}`
-        : '—';
+        : '-';
 
     const canPay = ['pending', 'awaiting_payment'].includes(order.status);
 
@@ -48,7 +48,7 @@ export default function Show({ order }) {
                         href="/orders"
                         className="text-sm font-medium text-gray-400 transition hover:text-white"
                     >
-                        ← Back to My Orders
+                        Back to My Orders
                     </Link>
 
                     <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -148,7 +148,9 @@ export default function Show({ order }) {
                         <div className="flex gap-4">
                             <div
                                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                                    canPay
+                                    canPay ||
+                                    order.status === 'processing' ||
+                                    order.status === 'completed'
                                         ? 'bg-blue-500/10 text-blue-400'
                                         : 'bg-gray-800 text-gray-500'
                                 }`}
@@ -159,7 +161,9 @@ export default function Show({ order }) {
                             <div>
                                 <p
                                     className={
-                                        canPay
+                                        canPay ||
+                                        order.status === 'processing' ||
+                                        order.status === 'completed'
                                             ? 'font-medium text-white'
                                             : 'font-medium text-gray-300'
                                     }
@@ -176,19 +180,31 @@ export default function Show({ order }) {
                         </div>
 
                         <div className="flex gap-4">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-800 text-sm font-bold text-gray-500">
+                            <div
+                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                                    order.status === 'completed'
+                                        ? 'bg-blue-500/10 text-blue-400'
+                                        : 'bg-gray-800 text-gray-500'
+                                }`}
+                            >
                                 3
                             </div>
 
                             <div>
-                                <p className="font-medium text-gray-300">
+                                <p
+                                    className={
+                                        order.status === 'completed'
+                                            ? 'font-medium text-white'
+                                            : 'font-medium text-gray-300'
+                                    }
+                                >
                                     Product Delivery
                                 </p>
 
                                 <p className="mt-1 text-sm leading-6 text-gray-500">
-                                    Secure product access will only be provided
-                                    after payment is verified and ownership is
-                                    granted.
+                                    {order.status === 'completed'
+                                        ? 'Payment is verified and product ownership has been granted. Secure product delivery will be available when a downloadable release is provided.'
+                                        : 'Secure product access will only be provided after payment is verified and ownership is granted.'}
                                 </p>
                             </div>
                         </div>
@@ -209,9 +225,9 @@ export default function Show({ order }) {
 
                 <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-5">
                     <p className="text-sm leading-6 text-gray-300">
-                        Creating an order does not mean the product is paid for
-                        or owned yet. Payment must be verified before product
-                        ownership and secure delivery are granted.
+                        {order.status === 'completed'
+                            ? 'This order is complete and product ownership has been granted to your account. Secure downloadable releases will be provided through the product delivery system when available.'
+                            : 'Creating an order does not mean the product is paid for or owned yet. Payment must be verified before product ownership and secure delivery are granted.'}
                     </p>
                 </div>
             </div>

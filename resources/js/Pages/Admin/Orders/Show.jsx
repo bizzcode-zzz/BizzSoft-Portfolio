@@ -21,14 +21,14 @@ export default function Show({ order, statuses }) {
     const formatPrice = (price) => {
         return new Intl.NumberFormat('en-PH', {
             style: 'currency',
-            currency: 'PHP',
+            currency: 'USD',
             minimumFractionDigits: 2,
         }).format(Number(price ?? 0));
     };
 
     const formatDate = (date) => {
         if (!date) {
-            return '—';
+            return '-';
         }
 
         return new Intl.DateTimeFormat('en-PH', {
@@ -42,7 +42,7 @@ export default function Show({ order, statuses }) {
 
     const formatVersion = (version) => {
         if (!version) {
-            return '—';
+            return '-';
         }
 
         const value = String(version);
@@ -73,7 +73,7 @@ export default function Show({ order, statuses }) {
                         href="/admin/orders"
                         className="text-sm font-medium text-gray-400 transition hover:text-white"
                     >
-                        ← Back to Orders
+                        Back to Orders
                     </Link>
 
                     <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -204,6 +204,7 @@ export default function Show({ order, statuses }) {
                                 Update the operational status of this order.
                             </p>
 
+                            {statuses.length > 1 ? (
                             <form
                                 onSubmit={submitStatus}
                                 className="mt-5 space-y-4"
@@ -257,6 +258,17 @@ export default function Show({ order, statuses }) {
                                         : 'Update Status'}
                                 </button>
                             </form>
+                            ) : (
+                                <div className="mt-5 rounded-lg border border-gray-800 bg-gray-950 p-4">
+                                    <p className="text-sm font-medium text-gray-200">
+                                        {order.status_label}
+                                    </p>
+                                    <p className="mt-1 text-sm leading-6 text-gray-500">
+                                        No further status changes are available
+                                        for this order.
+                                    </p>
+                                </div>
+                            )}
                         </section>
 
                         <section className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">

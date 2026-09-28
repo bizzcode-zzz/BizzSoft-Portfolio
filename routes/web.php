@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\CustomizationSecureAccessHandoffController;
 use App\Http\Controllers\Admin\CustomizationSecureAccessRevealController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\ProductReleaseController as AdminProductReleaseController;
 use App\Http\Controllers\Admin\TicketController as AdminTicketController;
 use App\Http\Controllers\Admin\TicketReplyController as AdminTicketReplyController;
 use App\Http\Controllers\Admin\TicketSecureAccessCloseController as AdminTicketSecureAccessCloseController;
@@ -23,6 +24,8 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\Http\Controllers\Customer\PaymentController as CustomerPaymentController;
+use App\Http\Controllers\Customer\ProductLibraryController;
+use App\Http\Controllers\Customer\ProductReleaseDownloadController;
 use App\Http\Controllers\CustomerDashboardController;
 use App\Http\Controllers\CustomizationCancellationController;
 use App\Http\Controllers\CustomizationConversationController;
@@ -92,6 +95,18 @@ Route::middleware('auth')->group(function () {
     */
 
     Route::middleware('role:customer')->group(function () {
+        Route::get(
+            '/my-products',
+            [ProductLibraryController::class, 'index']
+        )
+            ->name('customer.products.index');
+
+        Route::get(
+            '/my-products/{product}/releases/{productRelease}/download',
+            ProductReleaseDownloadController::class
+        )
+            ->name('customer.products.releases.download');
+
         Route::get(
             '/orders',
             [CustomerOrderController::class, 'index']
@@ -460,6 +475,18 @@ Route::middleware('auth')->group(function () {
             | Admin Products
             |--------------------------------------------------------------------------
             */
+
+            Route::post(
+                '/products/{product}/releases',
+                [AdminProductReleaseController::class, 'store']
+            )
+                ->name('products.releases.store');
+
+            Route::patch(
+                '/products/{product}/releases/{productRelease}/publish',
+                [AdminProductReleaseController::class, 'publish']
+            )
+                ->name('products.releases.publish');
 
             Route::resource(
                 'products',

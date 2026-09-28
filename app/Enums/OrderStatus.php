@@ -20,4 +20,31 @@ enum OrderStatus: string
             self::Cancelled => 'Cancelled',
         };
     }
+
+    public function adminTransitionTargets(): array
+    {
+        return match ($this) {
+            self::Pending => [
+                self::AwaitingPayment,
+                self::Cancelled,
+            ],
+            self::AwaitingPayment => [
+                self::Cancelled,
+            ],
+            self::Processing => [
+                self::Completed,
+            ],
+            self::Completed,
+            self::Cancelled => [],
+        };
+    }
+
+    public function canAdminTransitionTo(self $target): bool
+    {
+        return in_array(
+            $target,
+            $this->adminTransitionTargets(),
+            true
+        );
+    }
 }

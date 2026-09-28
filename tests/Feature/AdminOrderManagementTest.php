@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Enums\ProductStatus;
 use App\Models\Order;
 use App\Models\Product;
@@ -102,7 +103,19 @@ class AdminOrderManagementTest extends TestCase
                     'order.status',
                     OrderStatus::Pending->value
                 )
-                ->has('statuses', 5)
+                ->has('statuses', 3)
+                ->where(
+                    'statuses.0.value',
+                    OrderStatus::Pending->value
+                )
+                ->where(
+                    'statuses.1.value',
+                    OrderStatus::AwaitingPayment->value
+                )
+                ->where(
+                    'statuses.2.value',
+                    OrderStatus::Cancelled->value
+                )
         );
     }
 
@@ -237,7 +250,7 @@ class AdminOrderManagementTest extends TestCase
             ->patch(
                 route('admin.orders.status.update', $order),
                 [
-                    'status' => OrderStatus::Processing->value,
+                    'status' => OrderStatus::AwaitingPayment->value,
                 ]
             )
             ->assertRedirect(
@@ -255,9 +268,148 @@ class AdminOrderManagementTest extends TestCase
         );
 
         $this->assertSame(
+            OrderStatus::AwaitingPayment,
+            $order->status
+        );
+    }
+
+    public function test_admin_cannot_manually_move_awaiting_payment_order_to_processing(): void
+    {
+        $admin = $this->createAdmin();
+        $customer = $this->createCustomer();
+        $product = $this->createProduct();
+
+        $order = $this->createOrder(
+            customer: $customer,
+            product: $product,
+            status: OrderStatus::AwaitingPayment
+        );
+
+        $response = $this
+            ->actingAs($admin)
+            ->from(route('admin.orders.show', $order))
+            ->patch(
+                route('admin.orders.status.update', $order),
+                [
+                    'status' => OrderStatus::Processing->value,
+                ]
+            );
+
+        $response
+            ->assertRedirect(
+                route('admin.orders.show', $order)
+            )
+            ->assertSessionHasErrors('status');
+
+        $order->refresh();
+
+        $this->assertSame(
+            OrderStatus::AwaitingPayment,
+            $order->status
+        );
+    }
+
+    public function test_admin_can_complete_fully_paid_processing_order_and_grant_product_ownership(): void
+    {
+        $admin = $this->createAdmin();
+        $customer = $this->createCustomer();
+        $product = $this->createProduct();
+
+        $order = $this->createOrder(
+            customer: $customer,
+            product: $product,
+            orderNumber: 'BS-FULFILL-0001',
+            status: OrderStatus::Processing
+        );
+
+        $order->payments()->create([
+            'payment_number' => 'PAY-FULFILL-0001',
+            'user_id' => $customer->id,
+            'amount' => $order->price_snapshot,
+            'currency' => 'USD',
+            'provider' => 'paddle',
+            'method' => 'card',
+            'status' => PaymentStatus::Verified,
+            'verified_at' => now(),
+        ]);
+
+        $this
+            ->actingAs($admin)
+            ->patch(
+                route('admin.orders.status.update', $order),
+                [
+                    'status' => OrderStatus::Completed->value,
+                ]
+            )
+            ->assertRedirect(
+                route('admin.orders.show', $order)
+            );
+
+        $order->refresh();
+
+        $this->assertSame(
+            OrderStatus::Completed,
+            $order->status
+        );
+
+        $this->assertDatabaseHas('product_ownerships', [
+            'user_id' => $customer->id,
+            'product_id' => $product->id,
+            'order_id' => $order->id,
+            'granted_by' => $admin->id,
+        ]);
+    }
+
+    public function test_admin_cannot_complete_processing_order_without_full_verified_payment(): void
+    {
+        $admin = $this->createAdmin();
+        $customer = $this->createCustomer();
+        $product = $this->createProduct();
+
+        $order = $this->createOrder(
+            customer: $customer,
+            product: $product,
+            orderNumber: 'BS-FULFILL-0002',
+            status: OrderStatus::Processing
+        );
+
+        $order->payments()->create([
+            'payment_number' => 'PAY-FULFILL-0002',
+            'user_id' => $customer->id,
+            'amount' => '100.00',
+            'currency' => 'USD',
+            'provider' => 'paddle',
+            'method' => 'card',
+            'status' => PaymentStatus::Verified,
+            'verified_at' => now(),
+        ]);
+
+        $response = $this
+            ->actingAs($admin)
+            ->from(route('admin.orders.show', $order))
+            ->patch(
+                route('admin.orders.status.update', $order),
+                [
+                    'status' => OrderStatus::Completed->value,
+                ]
+            );
+
+        $response
+            ->assertRedirect(
+                route('admin.orders.show', $order)
+            )
+            ->assertSessionHasErrors('status');
+
+        $order->refresh();
+
+        $this->assertSame(
             OrderStatus::Processing,
             $order->status
         );
+
+        $this->assertDatabaseMissing('product_ownerships', [
+            'order_id' => $order->id,
+        ]);
     }
 
     private function createAdmin(): User

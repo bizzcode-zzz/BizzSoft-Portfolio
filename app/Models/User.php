@@ -51,6 +51,27 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
+    public function productOwnerships(): HasMany
+    {
+        return $this->hasMany(ProductOwnership::class);
+    }
+
+    public function grantedProductOwnerships(): HasMany
+    {
+        return $this->hasMany(
+            ProductOwnership::class,
+            'granted_by',
+        );
+    }
+
+    public function createdProductReleases(): HasMany
+    {
+        return $this->hasMany(
+            ProductRelease::class,
+            'created_by',
+        );
+    }
+
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
