@@ -16,7 +16,7 @@ export default function Dashboard({
     const formatCurrency = (amount) =>
         new Intl.NumberFormat('en-PH', {
             style: 'currency',
-            currency: 'PHP',
+            currency: 'USD',
         }).format(amount);
 
     return (

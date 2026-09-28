@@ -265,7 +265,7 @@ export default function Projects() {
                                         </span>
 
                                         <strong>
-                                            ₱84.6K
+                                            $84.6K
                                         </strong>
                                     </div>
 

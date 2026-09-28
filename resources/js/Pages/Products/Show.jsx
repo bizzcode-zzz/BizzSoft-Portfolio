@@ -22,9 +22,9 @@ export default function Show({ product }) {
     const isAdmin = roles.includes('admin');
 
     const formatPrice = (price) => {
-        return new Intl.NumberFormat('en-PH', {
+        return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'PHP',
+            currency: 'USD',
             minimumFractionDigits: 2,
         }).format(Number(price ?? 0));
     };

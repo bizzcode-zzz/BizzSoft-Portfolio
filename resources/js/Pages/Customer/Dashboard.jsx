@@ -24,7 +24,7 @@ export default function Dashboard({
                     <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         <div className="rounded-xl border border-dashed border-gray-700 bg-gray-900 p-5">
                             <div className="flex items-center gap-2">
-                                <span className="text-lg">💳</span>
+                                <span className="text-lg">ðŸ’³</span>
 
                                 <h2 className="font-semibold text-gray-200">
                                     Account Balance
@@ -32,7 +32,7 @@ export default function Dashboard({
                             </div>
 
                             <p className="mt-3 text-2xl font-bold text-emerald-400">
-                                ₱0.00
+                                $0.00
                             </p>
 
                             <div className="mt-3 flex items-center justify-between gap-3">
@@ -51,7 +51,7 @@ export default function Dashboard({
 
                         <div className="rounded-xl border border-dashed border-gray-700 bg-gray-900 p-5">
                             <div className="flex items-center gap-2">
-                                <span className="text-lg">📄</span>
+                                <span className="text-lg">ðŸ“„</span>
 
                                 <h2 className="font-semibold text-gray-200">
                                     Invoice
@@ -59,7 +59,7 @@ export default function Dashboard({
                             </div>
 
                             <p className="mt-3 text-2xl font-bold text-amber-400">
-                                ₱0.00
+                                $0.00
                             </p>
 
                             <div className="mt-3 flex items-center justify-between gap-3">
@@ -71,14 +71,14 @@ export default function Dashboard({
                                     type="button"
                                     className="text-sm font-medium text-amber-400 transition hover:text-amber-300"
                                 >
-                                    View Invoice →
+                                    View Invoice â†’
                                 </button>
                             </div>
                         </div>
 
                         <div className="rounded-xl border border-dashed border-gray-700 bg-gray-900 p-5">
                             <div className="flex items-center gap-2">
-                                <span className="text-lg">🎧</span>
+                                <span className="text-lg">ðŸŽ§</span>
 
                                 <h2 className="font-semibold text-gray-200">
                                     Active Support Tickets
@@ -110,14 +110,14 @@ export default function Dashboard({
                                     href="/tickets"
                                     className="text-sm font-medium text-blue-400 transition hover:text-blue-300"
                                 >
-                                    View Tickets →
+                                    View Tickets â†’
                                 </Link>
                             </div>
                         </div>
 
                         <div className="rounded-xl border border-dashed border-gray-700 bg-gray-900 p-5">
                             <div className="flex items-center gap-2">
-                                <span className="text-lg">⚙️</span>
+                                <span className="text-lg">âš™ï¸</span>
 
                                 <h2 className="font-semibold text-gray-200">
                                     Active Customizations
@@ -149,7 +149,7 @@ export default function Dashboard({
                                     href="/customizations"
                                     className="text-sm font-medium text-purple-400 transition hover:text-purple-300"
                                 >
-                                    View Requests →
+                                    View Requests â†’
                                 </Link>
                             </div>
                         </div>

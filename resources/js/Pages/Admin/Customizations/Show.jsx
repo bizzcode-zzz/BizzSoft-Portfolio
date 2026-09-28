@@ -599,7 +599,7 @@ export default function Show({
 
                                     <div className="relative mt-2">
                                         <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-gray-500">
-                                            ₱
+                                            $
                                         </span>
 
                                         <input

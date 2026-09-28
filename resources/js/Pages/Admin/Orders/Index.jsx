@@ -13,7 +13,7 @@ export default function Index({ orders }) {
     const formatPrice = (price) => {
         return new Intl.NumberFormat('en-PH', {
             style: 'currency',
-            currency: 'PHP',
+            currency: 'USD',
             minimumFractionDigits: 2,
         }).format(Number(price ?? 0));
     };

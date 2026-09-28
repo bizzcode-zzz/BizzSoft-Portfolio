@@ -27,7 +27,7 @@ function statusClasses(status) {
 function formatCurrency(value) {
     return new Intl.NumberFormat('en-PH', {
         style: 'currency',
-        currency: 'PHP',
+        currency: 'USD',
     }).format(Number(value ?? 0));
 }
 

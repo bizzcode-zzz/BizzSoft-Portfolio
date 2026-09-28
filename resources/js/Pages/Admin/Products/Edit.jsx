@@ -246,7 +246,7 @@ export default function Edit({ product, statuses }) {
 
                                 <div className="relative mt-2">
                                     <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-gray-500">
-                                        ₱
+                                        $
                                     </span>
 
                                     <input

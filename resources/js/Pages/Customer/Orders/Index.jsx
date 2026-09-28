@@ -11,16 +11,16 @@ const statusClasses = {
 
 export default function Index({ orders }) {
     const formatPrice = (price) => {
-        return new Intl.NumberFormat('en-PH', {
+        return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'PHP',
+            currency: 'USD',
             minimumFractionDigits: 2,
         }).format(Number(price ?? 0));
     };
 
     const formatDate = (date) => {
         if (!date) {
-            return 'â€”';
+            return '—';
         }
 
         return new Intl.DateTimeFormat('en-PH', {
@@ -120,7 +120,7 @@ export default function Index({ orders }) {
                                                 ? `v${String(
                                                       order.product_version,
                                                   ).replace(/^v/i, '')}`
-                                                : 'â€”'}
+                                                : '—'}
                                         </p>
                                     </div>
 

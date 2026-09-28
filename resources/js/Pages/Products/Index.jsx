@@ -3,9 +3,9 @@ import Footer from '../../Components/Footer';
 import AppLayout from '../../Layouts/AppLayout';
 
 function formatCurrency(value) {
-    return new Intl.NumberFormat('en-PH', {
+    return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'PHP',
+        currency: 'USD',
     }).format(Number(value ?? 0));
 }
 
@@ -59,9 +59,7 @@ export default function Index({ products }) {
 
                         {products.length === 0 ? (
                             <div className="rounded-2xl border border-dashed border-neutral-800 bg-neutral-900/50 px-6 py-20 text-center">
-                                <div className="text-4xl">
-                                    📦
-                                </div>
+                                <div className="text-4xl">??</div>
 
                                 <h3 className="mt-4 text-lg font-semibold text-white">
                                     No products available yet
@@ -95,7 +93,7 @@ export default function Index({ products }) {
                                                 ) : (
                                                     <div className="text-center">
                                                         <div className="text-5xl">
-                                                            📦
+                                                            ??
                                                         </div>
 
                                                         <p className="mt-3 text-xs font-medium uppercase tracking-widest text-neutral-600">
@@ -147,14 +145,12 @@ export default function Index({ products }) {
 
                                                 {product.demo_url && (
                                                     <a
-                                                        href={
-                                                            product.demo_url
-                                                        }
+                                                        href={product.demo_url}
                                                         target="_blank"
                                                         rel="noreferrer"
                                                         className="inline-flex flex-1 items-center justify-center rounded-lg border border-neutral-700 px-4 py-2.5 text-sm font-semibold text-neutral-200 transition hover:border-neutral-600 hover:bg-neutral-800"
                                                     >
-                                                        Live Demo ↗
+                                                        Live Demo ?
                                                     </a>
                                                 )}
                                             </div>
