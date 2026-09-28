@@ -84,6 +84,45 @@ class ProductController extends Controller
         ]);
     }
 
+    public function changelog(string $product): Response
+    {
+        $product = Product::query()
+            ->where('slug', $product)
+            ->where('status', ProductStatus::Active)
+            ->firstOrFail();
+
+        $releases = $product
+            ->releases()
+            ->where(
+                'status',
+                ProductReleaseStatus::Published->value
+            )
+            ->latest('released_at')
+            ->latest('id')
+            ->get();
+
+        $latestReleaseId = $releases->first()?->id;
+
+        return Inertia::render('Products/Changelog', [
+            'product' => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'slug' => $product->slug,
+                'version' => $product->version,
+
+                'releases' => $releases
+                    ->map(fn ($release) => [
+                        'version' => $release->version,
+                        'released_at' => $release->released_at,
+                        'release_notes' => $release->release_notes,
+                        'is_latest' => $release->id === $latestReleaseId,
+                    ])
+                    ->values()
+                    ->all(),
+            ],
+        ]);
+    }
+
     private function thumbnailUrl(?string $path): ?string
     {
         if (! $path) {

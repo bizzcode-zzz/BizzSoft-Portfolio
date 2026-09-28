@@ -57,6 +57,9 @@ Route::get('/', function () {
 Route::get('/products', [ProductController::class, 'index'])
     ->name('products.index');
 
+Route::get('/products/{product}/changelog', [ProductController::class, 'changelog'])
+    ->name('products.changelog');
+
 Route::get('/products/{product}', [ProductController::class, 'show'])
     ->name('products.show');
 
