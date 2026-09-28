@@ -133,6 +133,52 @@ export default function Index({ ownedProducts = [] }) {
                                                             </p>
                                                         </div>
 
+                                                        {release.package_replaced_at && (
+                                                            <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+                                                                <p className="text-sm font-semibold text-amber-300">
+                                                                    Important Package Update
+                                                                </p>
+
+                                                                <p className="mt-1 text-sm leading-6 text-amber-100/80">
+                                                                    Package updated:{' '}
+                                                                    {formatDate(
+                                                                        release.package_replaced_at,
+                                                                    )}
+                                                                </p>
+
+                                                                <p className="mt-2 text-sm leading-6 text-amber-100/80">
+                                                                    If you downloaded this release before the package update, please download it again.
+                                                                </p>
+                                                            </div>
+                                                        )}
+
+                                                        {(release.release_notes ||
+                                                            release.upgrade_notes) && (
+                                                            <div className="mt-4 space-y-4 border-t border-gray-800 pt-4">
+                                                                {release.release_notes && (
+                                                                    <div>
+                                                                        <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">
+                                                                            What's New
+                                                                        </p>
+                                                                        <p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-300">
+                                                                            {release.release_notes}
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+
+                                                                {release.upgrade_notes && (
+                                                                    <div>
+                                                                        <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
+                                                                            Upgrade Notes
+                                                                        </p>
+                                                                        <p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-400">
+                                                                            {release.upgrade_notes}
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+
                                                         <a
                                                             href={`/my-products/${ownedProduct.product.slug}/releases/${release.id}/download`}
                                                             className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500"

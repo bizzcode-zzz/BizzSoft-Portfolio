@@ -109,8 +109,11 @@ class ProductController extends Controller
                         'original_name' => $release->original_name,
                         'file_size' => $release->file_size,
                         'sha256' => $release->sha256,
+                        'release_notes' => $release->release_notes,
+                        'upgrade_notes' => $release->upgrade_notes,
                         'status' => $release->status->value,
                         'released_at' => $release->released_at,
+                        'package_replaced_at' => $release->package_replaced_at,
                         'created_at' => $release->created_at,
 
                         'creator' => $release->creator

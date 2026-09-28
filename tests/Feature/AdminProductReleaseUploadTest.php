@@ -254,6 +254,217 @@ class AdminProductReleaseUploadTest extends TestCase
         );
     }
 
+    public function test_admin_can_replace_published_package_and_record_replacement_time(): void
+    {
+        Storage::fake('local');
+
+        $admin = $this->createAdmin();
+        $product = $this->createProduct();
+
+        $oldPath = 'product-releases/'.$product->id.'/old-release.zip';
+
+        Storage::disk('local')->put(
+            $oldPath,
+            'old published package'
+        );
+
+        $release = ProductRelease::create([
+            'product_id' => $product->id,
+            'created_by' => $admin->id,
+            'version' => '5.0.2',
+            'file_path' => $oldPath,
+            'original_name' => 'old-release.zip',
+            'file_size' => 1000,
+            'sha256' => str_repeat('a', 64),
+            'release_notes' => 'Original notes',
+            'upgrade_notes' => 'Original upgrade notes',
+            'status' => ProductReleaseStatus::Published,
+            'released_at' => now(),
+        ]);
+
+        $response = $this
+            ->actingAs($admin)
+            ->post(
+                route(
+                    'admin.products.releases.update',
+                    [$product, $release]
+                ),
+                [
+                    '_method' => 'PATCH',
+                    'version' => '5.0.2',
+                    'release_notes' => 'Corrected release notes',
+                    'upgrade_notes' => 'Please re-download this package.',
+                    'release_file' => UploadedFile::fake()->create(
+                        'bizzsoft-v5.0.2-corrected.zip',
+                        2048,
+                        'application/zip'
+                    ),
+                ]
+            );
+
+        $response->assertRedirect(
+            route('admin.products.show', $product)
+        );
+
+        $release->refresh();
+
+        $this->assertSame(
+            ProductReleaseStatus::Published,
+            $release->status
+        );
+
+        $this->assertSame(
+            'bizzsoft-v5.0.2-corrected.zip',
+            $release->original_name
+        );
+
+        $this->assertNotSame(
+            $oldPath,
+            $release->file_path
+        );
+
+        $this->assertNotNull(
+            $release->package_replaced_at
+        );
+
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        $disk = Storage::disk('local');
+
+        $disk->assertMissing($oldPath);
+        $disk->assertExists($release->file_path);
+    }
+
+    public function test_published_notes_only_edit_does_not_mark_package_as_replaced(): void
+    {
+        Storage::fake('local');
+
+        $admin = $this->createAdmin();
+        $product = $this->createProduct();
+
+        $path = 'product-releases/'.$product->id.'/published.zip';
+
+        Storage::disk('local')->put(
+            $path,
+            'published package'
+        );
+
+        $release = ProductRelease::create([
+            'product_id' => $product->id,
+            'created_by' => $admin->id,
+            'version' => '5.0.2',
+            'file_path' => $path,
+            'original_name' => 'published.zip',
+            'file_size' => 1000,
+            'sha256' => str_repeat('b', 64),
+            'status' => ProductReleaseStatus::Published,
+            'released_at' => now(),
+        ]);
+
+        $this
+            ->actingAs($admin)
+            ->post(
+                route(
+                    'admin.products.releases.update',
+                    [$product, $release]
+                ),
+                [
+                    '_method' => 'PATCH',
+                    'version' => '5.0.2',
+                    'release_notes' => 'Updated changelog only.',
+                    'upgrade_notes' => 'No package replacement required.',
+                ]
+            )
+            ->assertRedirect(
+                route('admin.products.show', $product)
+            );
+
+        $release->refresh();
+
+        $this->assertSame(
+            'Updated changelog only.',
+            $release->release_notes
+        );
+
+        $this->assertSame(
+            $path,
+            $release->file_path
+        );
+
+        $this->assertNull(
+            $release->package_replaced_at
+        );
+
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        $disk = Storage::disk('local');
+
+        $disk->assertExists($path);
+    }
+
+    public function test_replacing_draft_package_does_not_create_customer_replacement_warning(): void
+    {
+        Storage::fake('local');
+
+        $admin = $this->createAdmin();
+        $product = $this->createProduct();
+
+        $oldPath = 'product-releases/'.$product->id.'/draft-old.zip';
+
+        Storage::disk('local')->put(
+            $oldPath,
+            'old draft package'
+        );
+
+        $release = ProductRelease::create([
+            'product_id' => $product->id,
+            'created_by' => $admin->id,
+            'version' => '5.0.3',
+            'file_path' => $oldPath,
+            'original_name' => 'draft-old.zip',
+            'file_size' => 1000,
+            'sha256' => str_repeat('c', 64),
+            'status' => ProductReleaseStatus::Draft,
+        ]);
+
+        $this
+            ->actingAs($admin)
+            ->post(
+                route(
+                    'admin.products.releases.update',
+                    [$product, $release]
+                ),
+                [
+                    '_method' => 'PATCH',
+                    'version' => '5.0.3',
+                    'release_notes' => 'Draft notes',
+                    'upgrade_notes' => null,
+                    'release_file' => UploadedFile::fake()->create(
+                        'bizzsoft-v5.0.3.zip',
+                        2048,
+                        'application/zip'
+                    ),
+                ]
+            )
+            ->assertRedirect(
+                route('admin.products.show', $product)
+            );
+
+        $release->refresh();
+
+        $this->assertSame(
+            ProductReleaseStatus::Draft,
+            $release->status
+        );
+
+        $this->assertNull(
+            $release->package_replaced_at
+        );
+
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        $disk = Storage::disk('local');
+
+        $disk->assertMissing($oldPath);
+        $disk->assertExists($release->file_path);
+    }
     private function createAdmin(): User
     {
         $admin = User::factory()->create();

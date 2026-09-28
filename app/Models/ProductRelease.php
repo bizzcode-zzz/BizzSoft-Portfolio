@@ -16,6 +16,9 @@ class ProductRelease extends Model
         'original_name',
         'file_size',
         'sha256',
+        'release_notes',
+        'upgrade_notes',
+        'package_replaced_at',
         'status',
         'released_at',
     ];
@@ -25,6 +28,7 @@ class ProductRelease extends Model
         return [
             'status' => ProductReleaseStatus::class,
             'released_at' => 'datetime',
+            'package_replaced_at' => 'datetime',
             'file_size' => 'integer',
         ];
     }

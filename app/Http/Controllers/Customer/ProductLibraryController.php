@@ -44,7 +44,10 @@ class ProductLibraryController extends Controller
                                 'version' => $release->version,
                                 'original_name' => $release->original_name,
                                 'file_size' => $release->file_size,
+                                'release_notes' => $release->release_notes,
+                                'upgrade_notes' => $release->upgrade_notes,
                                 'released_at' => $release->released_at,
+                                'package_replaced_at' => $release->package_replaced_at,
                             ])
                             ->values()
                             ->all(),

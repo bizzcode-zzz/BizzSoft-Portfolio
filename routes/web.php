@@ -483,6 +483,12 @@ Route::middleware('auth')->group(function () {
                 ->name('products.releases.store');
 
             Route::patch(
+                '/products/{product}/releases/{productRelease}',
+                [AdminProductReleaseController::class, 'update']
+            )
+                ->name('products.releases.update');
+
+            Route::patch(
                 '/products/{product}/releases/{productRelease}/publish',
                 [AdminProductReleaseController::class, 'publish']
             )
