@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ProductStatus;
+use App\Enums\ProductReleaseStatus;
 use App\Models\Product;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
@@ -42,6 +43,16 @@ class ProductController extends Controller
             ->where('status', ProductStatus::Active)
             ->firstOrFail();
 
+        $latestRelease = $product
+            ->releases()
+            ->where(
+                'status',
+                ProductReleaseStatus::Published->value
+            )
+            ->latest('released_at')
+            ->latest('id')
+            ->first();
+
         return Inertia::render('Products/Show', [
             'product' => [
                 'id' => $product->id,
@@ -55,6 +66,14 @@ class ProductController extends Controller
                     $product->thumbnail_path
                 ),
                 'demo_url' => $product->demo_url,
+
+                'latest_release' => $latestRelease
+                    ? [
+                        'version' => $latestRelease->version,
+                        'released_at' => $latestRelease->released_at,
+                        'release_notes' => $latestRelease->release_notes,
+                    ]
+                    : null,
 
                 'built_with' => $product->built_with,
                 'server_requirement' => $product->server_requirement,

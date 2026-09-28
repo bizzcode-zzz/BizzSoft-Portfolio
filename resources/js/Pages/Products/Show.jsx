@@ -41,7 +41,22 @@ export default function Show({ product }) {
             : `v${value}`;
     };
 
+    const formatDate = (value) => {
+        if (!value) {
+            return null;
+        }
+
+        return new Intl.DateTimeFormat('en-PH', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        }).format(new Date(value));
+    };
+
     const version = formatVersion(product.version);
+    const latestRelease = product.latest_release ?? null;
+    const latestReleaseVersion = formatVersion(latestRelease?.version);
+    const latestReleaseDate = formatDate(latestRelease?.released_at);
 
     const showShortDescription =
         product.short_description &&
@@ -50,8 +65,8 @@ export default function Show({ product }) {
 
     const productDetails = [
         {
-            label: 'Current Version',
-            value: version,
+            label: latestRelease ? 'Latest Release' : 'Product Version',
+            value: latestReleaseVersion ?? version,
         },
         {
             label: 'Built With',
@@ -141,7 +156,7 @@ export default function Show({ product }) {
                         href="/products"
                         className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-white"
                     >
-                        <span aria-hidden="true">←</span>
+                        <span aria-hidden="true">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â</span>
                         Back to Products
                     </Link>
 
@@ -236,7 +251,7 @@ export default function Show({ product }) {
                                             rel="noopener noreferrer"
                                             className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
                                         >
-                                            View Live Demo ↗
+                                            View Live Demo &#8599;
                                         </a>
                                     ) : (
                                         <button
@@ -244,7 +259,7 @@ export default function Show({ product }) {
                                             disabled
                                             className="w-full cursor-not-allowed rounded-xl border border-slate-700 bg-slate-800 px-5 py-3 text-sm font-semibold text-slate-500"
                                         >
-                                            Live Demo — Coming Soon
+                                            Live Demo ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Coming Soon
                                         </button>
                                     )}
 
@@ -290,6 +305,48 @@ export default function Show({ product }) {
                                 </section>
                             )}
 
+                            {/* Latest Update */}
+
+                            {latestRelease && (
+                                <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
+                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                        <div>
+                                            <p className="text-sm font-semibold text-blue-400">
+                                                Latest Update
+                                            </p>
+
+                                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                                                <h2 className="text-lg font-semibold text-white">
+                                                    {latestReleaseVersion}
+                                                </h2>
+
+                                                <span className="inline-flex rounded-full bg-blue-500/10 px-2.5 py-1 text-xs font-semibold text-blue-300 ring-1 ring-inset ring-blue-500/20">
+                                                    Latest
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {latestReleaseDate && (
+                                            <p className="text-sm text-slate-500">
+                                                Released {latestReleaseDate}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {latestRelease.release_notes && (
+                                        <div className="mt-5 border-t border-slate-800 pt-5">
+                                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                                What&apos;s New
+                                            </p>
+
+                                            <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-300">
+                                                {latestRelease.release_notes}
+                                            </p>
+                                        </div>
+                                    )}
+                                </section>
+                            )}
+
                             {/* What's Included */}
 
                             {includedItems.length > 0 && (
@@ -306,7 +363,7 @@ export default function Show({ product }) {
                                                     className="flex items-start gap-3"
                                                 >
                                                     <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-xs font-bold text-emerald-400">
-                                                        ✓
+                                                        &#10003;
                                                     </div>
 
                                                     <p className="text-sm leading-6 text-slate-300">
@@ -375,7 +432,7 @@ export default function Show({ product }) {
                                 rel="noopener noreferrer"
                                 className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-3 text-center text-xs font-semibold text-white transition hover:bg-blue-500"
                             >
-                                Live Demo ↗
+                                Live Demo ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â
                             </a>
                         ) : (
                             <button
