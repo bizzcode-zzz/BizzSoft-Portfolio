@@ -667,9 +667,17 @@ export default function Show({ product }) {
                                             >
                                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                                     <div>
-                                                        <p className="font-semibold text-white">
-                                                            v{release.version}
-                                                        </p>
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <p className="font-semibold text-white">
+                                                                v{release.version}
+                                                            </p>
+
+                                                            {release.is_latest && (
+                                                                <span className="inline-flex rounded-full bg-blue-500/10 px-2.5 py-1 text-xs font-semibold text-blue-300 ring-1 ring-inset ring-blue-500/20">
+                                                                    Latest
+                                                                </span>
+                                                            )}
+                                                        </div>
 
                                                         <p className="mt-1 break-all text-sm text-gray-500">
                                                             {

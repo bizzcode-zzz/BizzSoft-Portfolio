@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Customer;
 use App\Enums\ProductReleaseStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductOwnership;
 use App\Models\ProductRelease;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -28,12 +29,17 @@ class ProductReleaseDownloadController extends Controller
             abort(404);
         }
 
-        $ownsProduct = $request->user()
+        $ownership = $request->user()
             ->productOwnerships()
+            ->with('startingRelease')
             ->where('product_id', $product->id)
-            ->exists();
+            ->first();
 
-        if (! $ownsProduct) {
+        if ($ownership === null) {
+            abort(404);
+        }
+
+        if (! $this->isReleaseEntitled($productRelease, $ownership)) {
             abort(404);
         }
 
@@ -51,5 +57,33 @@ class ProductReleaseDownloadController extends Controller
                 'X-Content-Type-Options' => 'nosniff',
             ]
         );
+    }
+
+    private function isReleaseEntitled(
+        ProductRelease $release,
+        ProductOwnership $ownership
+    ): bool {
+        $startingRelease = $ownership->startingRelease;
+
+        if ($startingRelease === null) {
+            return true;
+        }
+
+        if (
+            $release->released_at === null ||
+            $startingRelease->released_at === null
+        ) {
+            return $release->id >= $startingRelease->id;
+        }
+
+        if ($release->released_at->gt($startingRelease->released_at)) {
+            return true;
+        }
+
+        if ($release->released_at->lt($startingRelease->released_at)) {
+            return false;
+        }
+
+        return $release->id >= $startingRelease->id;
     }
 }

@@ -360,6 +360,73 @@ class AdminOrderManagementTest extends TestCase
         ]);
     }
 
+    public function test_completed_order_starts_entitlement_at_latest_published_release(): void
+    {
+        $admin = $this->createAdmin();
+        $customer = $this->createCustomer();
+        $product = $this->createProduct();
+
+        \App\Models\ProductRelease::create([
+            'product_id' => $product->id,
+            'created_by' => $admin->id,
+            'version' => '5.0.1',
+            'file_path' => 'product-releases/'.$product->id.'/5.0.1.zip',
+            'original_name' => 'bizzsoft-v5.0.1.zip',
+            'file_size' => 1000,
+            'sha256' => str_repeat('a', 64),
+            'status' => \App\Enums\ProductReleaseStatus::Published,
+            'released_at' => now()->subDay(),
+        ]);
+
+        $latestRelease = \App\Models\ProductRelease::create([
+            'product_id' => $product->id,
+            'created_by' => $admin->id,
+            'version' => '5.0.2',
+            'file_path' => 'product-releases/'.$product->id.'/5.0.2.zip',
+            'original_name' => 'bizzsoft-v5.0.2.zip',
+            'file_size' => 1000,
+            'sha256' => str_repeat('b', 64),
+            'status' => \App\Enums\ProductReleaseStatus::Published,
+            'released_at' => now(),
+        ]);
+
+        $order = $this->createOrder(
+            customer: $customer,
+            product: $product,
+            orderNumber: 'BS-ENTITLE-0001',
+            status: OrderStatus::Processing
+        );
+
+        $order->payments()->create([
+            'payment_number' => 'PAY-ENTITLE-0001',
+            'user_id' => $customer->id,
+            'amount' => $order->price_snapshot,
+            'currency' => 'USD',
+            'provider' => 'paddle',
+            'method' => 'card',
+            'status' => PaymentStatus::Verified,
+            'verified_at' => now(),
+        ]);
+
+        $this
+            ->actingAs($admin)
+            ->patch(
+                route('admin.orders.status.update', $order),
+                [
+                    'status' => OrderStatus::Completed->value,
+                ]
+            )
+            ->assertRedirect(
+                route('admin.orders.show', $order)
+            );
+
+        $this->assertDatabaseHas('product_ownerships', [
+            'user_id' => $customer->id,
+            'product_id' => $product->id,
+            'order_id' => $order->id,
+            'starting_release_id' => $latestRelease->id,
+        ]);
+    }
     public function test_admin_cannot_complete_processing_order_without_full_verified_payment(): void
     {
         $admin = $this->createAdmin();

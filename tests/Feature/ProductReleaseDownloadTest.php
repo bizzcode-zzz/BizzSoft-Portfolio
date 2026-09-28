@@ -189,6 +189,171 @@ class ProductReleaseDownloadTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_owner_cannot_download_release_before_starting_entitlement(): void
+    {
+        Storage::fake('local');
+
+        $customer = $this->createCustomer();
+
+        $product = $this->createProduct(
+            name: 'BizzSoft V5',
+            slug: 'bizzsoft-v5'
+        );
+
+        $olderRelease = ProductRelease::create([
+            'product_id' => $product->id,
+            'version' => '5.0.1',
+            'file_path' => 'product-releases/'.$product->id.'/5.0.1.zip',
+            'original_name' => 'bizzsoft-v5.0.1.zip',
+            'file_size' => 1000,
+            'sha256' => str_repeat('a', 64),
+            'status' => ProductReleaseStatus::Published,
+            'released_at' => now()->subDays(2),
+        ]);
+
+        $startingRelease = ProductRelease::create([
+            'product_id' => $product->id,
+            'version' => '5.0.2',
+            'file_path' => 'product-releases/'.$product->id.'/5.0.2.zip',
+            'original_name' => 'bizzsoft-v5.0.2.zip',
+            'file_size' => 1000,
+            'sha256' => str_repeat('b', 64),
+            'status' => ProductReleaseStatus::Published,
+            'released_at' => now()->subDay(),
+        ]);
+
+        $ownership = $this->grantOwnership(
+            customer: $customer,
+            product: $product,
+            orderNumber: 'BS-DOWNLOAD-ENTITLE-0001'
+        );
+
+        $ownership->update([
+            'starting_release_id' => $startingRelease->id,
+        ]);
+
+        Storage::disk('local')->put(
+            $olderRelease->file_path,
+            'old release contents'
+        );
+
+        $this
+            ->actingAs($customer)
+            ->get(
+                route(
+                    'customer.products.releases.download',
+                    [$product, $olderRelease]
+                )
+            )
+            ->assertNotFound();
+    }
+
+    public function test_owner_can_download_starting_entitlement_release(): void
+    {
+        Storage::fake('local');
+
+        $customer = $this->createCustomer();
+
+        $product = $this->createProduct(
+            name: 'BizzSoft V5',
+            slug: 'bizzsoft-v5'
+        );
+
+        $startingRelease = ProductRelease::create([
+            'product_id' => $product->id,
+            'version' => '5.0.2',
+            'file_path' => 'product-releases/'.$product->id.'/5.0.2.zip',
+            'original_name' => 'bizzsoft-v5.0.2.zip',
+            'file_size' => 1000,
+            'sha256' => str_repeat('b', 64),
+            'status' => ProductReleaseStatus::Published,
+            'released_at' => now()->subDay(),
+        ]);
+
+        $ownership = $this->grantOwnership(
+            customer: $customer,
+            product: $product,
+            orderNumber: 'BS-DOWNLOAD-ENTITLE-0002'
+        );
+
+        $ownership->update([
+            'starting_release_id' => $startingRelease->id,
+        ]);
+
+        Storage::disk('local')->put(
+            $startingRelease->file_path,
+            'starting release contents'
+        );
+
+        $this
+            ->actingAs($customer)
+            ->get(
+                route(
+                    'customer.products.releases.download',
+                    [$product, $startingRelease]
+                )
+            )
+            ->assertOk();
+    }
+
+    public function test_owner_can_download_newer_published_release_after_starting_entitlement(): void
+    {
+        Storage::fake('local');
+
+        $customer = $this->createCustomer();
+
+        $product = $this->createProduct(
+            name: 'BizzSoft V5',
+            slug: 'bizzsoft-v5'
+        );
+
+        $startingRelease = ProductRelease::create([
+            'product_id' => $product->id,
+            'version' => '5.0.2',
+            'file_path' => 'product-releases/'.$product->id.'/5.0.2.zip',
+            'original_name' => 'bizzsoft-v5.0.2.zip',
+            'file_size' => 1000,
+            'sha256' => str_repeat('b', 64),
+            'status' => ProductReleaseStatus::Published,
+            'released_at' => now()->subDay(),
+        ]);
+
+        $newerRelease = ProductRelease::create([
+            'product_id' => $product->id,
+            'version' => '5.0.3',
+            'file_path' => 'product-releases/'.$product->id.'/5.0.3.zip',
+            'original_name' => 'bizzsoft-v5.0.3.zip',
+            'file_size' => 1000,
+            'sha256' => str_repeat('c', 64),
+            'status' => ProductReleaseStatus::Published,
+            'released_at' => now(),
+        ]);
+
+        $ownership = $this->grantOwnership(
+            customer: $customer,
+            product: $product,
+            orderNumber: 'BS-DOWNLOAD-ENTITLE-0003'
+        );
+
+        $ownership->update([
+            'starting_release_id' => $startingRelease->id,
+        ]);
+
+        Storage::disk('local')->put(
+            $newerRelease->file_path,
+            'newer release contents'
+        );
+
+        $this
+            ->actingAs($customer)
+            ->get(
+                route(
+                    'customer.products.releases.download',
+                    [$product, $newerRelease]
+                )
+            )
+            ->assertOk();
+    }
     private function createCustomer(): User
     {
         $customer = User::factory()->create();

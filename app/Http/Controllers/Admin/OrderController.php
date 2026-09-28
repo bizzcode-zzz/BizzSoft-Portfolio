@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\ProductReleaseStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\ProductOwnership;
+use App\Models\ProductRelease;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -149,10 +151,21 @@ class OrderController extends Controller
             ]);
         }
 
+        $startingReleaseId = ProductRelease::query()
+            ->where('product_id', $order->product_id)
+            ->where(
+                'status',
+                ProductReleaseStatus::Published->value
+            )
+            ->latest('released_at')
+            ->latest('id')
+            ->value('id');
+
         ProductOwnership::create([
             'user_id' => $order->user_id,
             'product_id' => $order->product_id,
             'order_id' => $order->id,
+            'starting_release_id' => $startingReleaseId,
             'granted_by' => $request->user()->id,
             'granted_at' => now(),
         ]);

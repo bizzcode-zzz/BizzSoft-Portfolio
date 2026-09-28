@@ -11,6 +11,7 @@ class ProductOwnership extends Model
         'user_id',
         'product_id',
         'order_id',
+        'starting_release_id',
         'granted_by',
         'granted_at',
     ];
@@ -35,6 +36,14 @@ class ProductOwnership extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function startingRelease(): BelongsTo
+    {
+        return $this->belongsTo(
+            ProductRelease::class,
+            'starting_release_id'
+        );
     }
 
     public function grantor(): BelongsTo

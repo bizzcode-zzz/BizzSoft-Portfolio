@@ -98,6 +98,13 @@ class ProductController extends Controller
                 ->latest(),
         ]);
 
+        $latestPublishedReleaseId = $product
+            ->releases()
+            ->where('status', 'published')
+            ->latest('released_at')
+            ->latest('id')
+            ->value('id');
+
         return Inertia::render('Admin/Products/Show', [
             'product' => [
                 ...$this->productData($product),
@@ -112,6 +119,7 @@ class ProductController extends Controller
                         'release_notes' => $release->release_notes,
                         'upgrade_notes' => $release->upgrade_notes,
                         'status' => $release->status->value,
+                        'is_latest' => $release->id === $latestPublishedReleaseId,
                         'released_at' => $release->released_at,
                         'package_replaced_at' => $release->package_replaced_at,
                         'created_at' => $release->created_at,
