@@ -17,6 +17,7 @@ class ProductLibraryController extends Controller
             ->productOwnerships()
             ->with([
                 'startingRelease:id,released_at',
+                'licenses',
                 'product.releases' => fn ($query) => $query
                     ->where(
                         'status',
@@ -47,6 +48,18 @@ class ProductLibraryController extends Controller
                     return [
                         'ownership_id' => $ownership->id,
                         'granted_at' => $ownership->granted_at,
+
+                        'licenses' => $ownership->licenses
+                            ->sortBy('id')
+                            ->values()
+                            ->map(fn ($license) => [
+                                'id' => $license->id,
+                                'license_key' => $license->license_key,
+                                'status' => $license->status,
+                                'production_domain' => $license->production_domain,
+                                'activated_at' => $license->activated_at,
+                            ])
+                            ->all(),
 
                         'product' => [
                             'id' => $ownership->product->id,

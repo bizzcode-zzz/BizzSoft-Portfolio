@@ -7,11 +7,13 @@ use App\Enums\PaymentStatus;
 use App\Enums\ProductReleaseStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\ProductLicense;
 use App\Models\ProductOwnership;
 use App\Models\ProductRelease;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -161,18 +163,43 @@ class OrderController extends Controller
             ->latest('id')
             ->value('id');
 
-        ProductOwnership::create([
-            'user_id' => $order->user_id,
-            'product_id' => $order->product_id,
+        $ownership = ProductOwnership::query()->firstOrCreate(
+            [
+                'user_id' => $order->user_id,
+                'product_id' => $order->product_id,
+            ],
+            [
+                'order_id' => $order->id,
+                'starting_release_id' => $startingReleaseId,
+                'granted_by' => $request->user()->id,
+                'granted_at' => now(),
+            ]
+        );
+
+        ProductLicense::create([
+            'product_ownership_id' => $ownership->id,
             'order_id' => $order->id,
-            'starting_release_id' => $startingReleaseId,
-            'granted_by' => $request->user()->id,
-            'granted_at' => now(),
+            'license_key' => $this->generateLicenseKey(),
+            'status' => 'unactivated',
         ]);
 
         $order->update([
             'status' => OrderStatus::Completed,
         ]);
+    }
+
+    private function generateLicenseKey(): string
+    {
+        do {
+            $token = strtoupper(Str::random(16));
+            $licenseKey = 'BIZZ-'.implode('-', str_split($token, 4));
+        } while (
+            ProductLicense::query()
+                ->where('license_key', $licenseKey)
+                ->exists()
+        );
+
+        return $licenseKey;
     }
 
     private function statuses(Order $order): array

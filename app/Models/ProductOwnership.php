@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProductOwnership extends Model
 {
@@ -44,6 +45,11 @@ class ProductOwnership extends Model
             ProductRelease::class,
             'starting_release_id'
         );
+    }
+
+    public function licenses(): HasMany
+    {
+        return $this->hasMany(ProductLicense::class);
     }
 
     public function grantor(): BelongsTo

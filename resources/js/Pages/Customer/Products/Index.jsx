@@ -84,6 +84,81 @@ export default function Index({ ownedProducts = [] }) {
                                 </div>
 
                                 <div className="mt-6">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <h3 className="font-semibold text-white">
+                                            Licenses
+                                        </h3>
+
+                                        <span className="text-xs text-gray-500">
+                                            {ownedProduct.licenses?.length ?? 0} license{(ownedProduct.licenses?.length ?? 0) === 1 ? '' : 's'}
+                                        </span>
+                                    </div>
+
+                                    {ownedProduct.licenses?.length > 0 ? (
+                                        <div className="mt-4 space-y-3">
+                                            {ownedProduct.licenses.map((license, index) => (
+                                                <div
+                                                    key={license.id}
+                                                    className="rounded-lg border border-gray-800 bg-gray-950 p-4"
+                                                >
+                                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                                        <div>
+                                                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                                                License #{index + 1}
+                                                            </p>
+
+                                                            <p className="mt-2 break-all font-mono text-sm text-gray-200">
+                                                                {license.license_key}
+                                                            </p>
+                                                        </div>
+
+                                                        <span
+                                                            className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${
+                                                                license.status === 'active'
+                                                                    ? 'bg-emerald-500/10 text-emerald-300 ring-emerald-500/20'
+                                                                    : 'bg-gray-500/10 text-gray-300 ring-gray-500/20'
+                                                            }`}
+                                                        >
+                                                            {license.status === 'active'
+                                                                ? 'Active'
+                                                                : license.status === 'deactivated'
+                                                                  ? 'Deactivated'
+                                                                  : 'Not Activated'}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                                                        <div>
+                                                            <p className="text-xs uppercase tracking-wide text-gray-500">
+                                                                Production Domain
+                                                            </p>
+                                                            <p className="mt-1 text-gray-300">
+                                                                {license.production_domain ?? 'Not activated yet'}
+                                                            </p>
+                                                        </div>
+
+                                                        <div>
+                                                            <p className="text-xs uppercase tracking-wide text-gray-500">
+                                                                Activated
+                                                            </p>
+                                                            <p className="mt-1 text-gray-300">
+                                                                {license.activated_at
+                                                                    ? formatDate(license.activated_at)
+                                                                    : 'Not activated yet'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="mt-4 text-sm text-gray-500">
+                                            No licenses have been issued yet.
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="mt-6">
                                     <h3 className="font-semibold text-white">
                                         Available Releases
                                     </h3>

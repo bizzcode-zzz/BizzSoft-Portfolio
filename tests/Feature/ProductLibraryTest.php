@@ -7,6 +7,7 @@ use App\Enums\ProductReleaseStatus;
 use App\Enums\ProductStatus;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductLicense;
 use App\Models\ProductOwnership;
 use App\Models\ProductRelease;
 use App\Models\User;
@@ -80,12 +81,22 @@ class ProductLibraryTest extends TestCase
             'ordered_at' => now(),
         ]);
 
-        ProductOwnership::create([
+        $ownership = ProductOwnership::create([
             'user_id' => $customer->id,
             'product_id' => $product->id,
             'order_id' => $order->id,
             'starting_release_id' => $startingRelease->id,
             'granted_at' => now(),
+        ]);
+
+        ProductLicense::create([
+            'product_ownership_id' => $ownership->id,
+            'order_id' => $order->id,
+            'license_key' => 'BIZZ-TEST-LIBR-ARY1-0001',
+            'status' => 'active',
+            'production_domain' => 'company-a.test',
+            'activated_at' => now(),
+            'last_validated_at' => now(),
         ]);
 
         $response = $this
@@ -98,6 +109,20 @@ class ProductLibraryTest extends TestCase
             fn (Assert $page) => $page
                 ->component('Customer/Products/Index')
                 ->has('ownedProducts', 1)
+                ->has('ownedProducts.0.licenses', 1)
+                ->where(
+                    'ownedProducts.0.licenses.0.license_key',
+                    'BIZZ-TEST-LIBR-ARY1-0001'
+                )
+                ->where(
+                    'ownedProducts.0.licenses.0.status',
+                    'active'
+                )
+                ->where(
+                    'ownedProducts.0.licenses.0.production_domain',
+                    'company-a.test'
+                )
+                ->has('ownedProducts.0.licenses.0.activated_at')
                 ->has('ownedProducts.0.product.releases', 2)
                 ->where(
                     'ownedProducts.0.product.releases.0.id',

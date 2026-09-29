@@ -360,6 +360,105 @@ class AdminOrderManagementTest extends TestCase
         ]);
     }
 
+    public function test_repeated_purchase_of_same_product_reuses_ownership_and_creates_separate_licenses(): void
+    {
+        $admin = $this->createAdmin();
+        $customer = $this->createCustomer();
+        $product = $this->createProduct();
+
+        $firstOrder = $this->createOrder(
+            customer: $customer,
+            product: $product,
+            orderNumber: 'BS-LICENSE-0001',
+            status: OrderStatus::Processing
+        );
+
+        $firstOrder->payments()->create([
+            'payment_number' => 'PAY-LICENSE-0001',
+            'user_id' => $customer->id,
+            'amount' => $firstOrder->price_snapshot,
+            'currency' => 'USD',
+            'provider' => 'paddle',
+            'method' => 'card',
+            'status' => PaymentStatus::Verified,
+            'verified_at' => now(),
+        ]);
+
+        $this
+            ->actingAs($admin)
+            ->patch(
+                route('admin.orders.status.update', $firstOrder),
+                ['status' => OrderStatus::Completed->value]
+            )
+            ->assertRedirect(
+                route('admin.orders.show', $firstOrder)
+            );
+
+        $this->assertDatabaseCount('product_ownerships', 1);
+        $this->assertDatabaseCount('product_licenses', 1);
+
+        $this->assertDatabaseHas('product_licenses', [
+            'order_id' => $firstOrder->id,
+            'status' => 'unactivated',
+            'production_domain' => null,
+        ]);
+
+        $secondOrder = $this->createOrder(
+            customer: $customer,
+            product: $product,
+            orderNumber: 'BS-LICENSE-0002',
+            status: OrderStatus::Processing
+        );
+
+        $secondOrder->payments()->create([
+            'payment_number' => 'PAY-LICENSE-0002',
+            'user_id' => $customer->id,
+            'amount' => $secondOrder->price_snapshot,
+            'currency' => 'USD',
+            'provider' => 'paddle',
+            'method' => 'card',
+            'status' => PaymentStatus::Verified,
+            'verified_at' => now(),
+        ]);
+
+        $this
+            ->actingAs($admin)
+            ->patch(
+                route('admin.orders.status.update', $secondOrder),
+                ['status' => OrderStatus::Completed->value]
+            )
+            ->assertRedirect(
+                route('admin.orders.show', $secondOrder)
+            );
+
+        $this->assertDatabaseCount('product_ownerships', 1);
+        $this->assertDatabaseCount('product_licenses', 2);
+
+        $this->assertDatabaseHas('product_ownerships', [
+            'user_id' => $customer->id,
+            'product_id' => $product->id,
+            'order_id' => $firstOrder->id,
+        ]);
+
+        $this->assertDatabaseHas('product_licenses', [
+            'order_id' => $firstOrder->id,
+        ]);
+
+        $this->assertDatabaseHas('product_licenses', [
+            'order_id' => $secondOrder->id,
+        ]);
+
+        $licenseKeys = \App\Models\ProductLicense::query()
+            ->orderBy('id')
+            ->pluck('license_key');
+
+        $this->assertCount(2, $licenseKeys);
+        $this->assertNotSame(
+            $licenseKeys[0],
+            $licenseKeys[1]
+        );
+    }
+
     public function test_completed_order_starts_entitlement_at_latest_published_release(): void
     {
         $admin = $this->createAdmin();

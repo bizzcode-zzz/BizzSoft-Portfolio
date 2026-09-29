@@ -53,4 +53,9 @@ class Order extends Model
     {
         return $this->hasOne(ProductOwnership::class);
     }
+
+    public function productLicense(): HasOne
+    {
+        return $this->hasOne(ProductLicense::class);
+    }
 }
