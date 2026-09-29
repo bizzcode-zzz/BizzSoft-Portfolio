@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\Route;
 Route::post(
     '/licenses/activate',
     LicenseActivationController::class
-)->name('licenses.activate');
+)->middleware('throttle:licenses')->name('licenses.activate');
 
 Route::post(
     '/licenses/validate',
     LicenseValidationController::class
-)->name('licenses.validate');
+)->middleware('throttle:licenses')->name('licenses.validate');

@@ -132,6 +132,38 @@ class LicenseValidationApiTest extends TestCase
             ]);
     }
 
+    public function test_license_validation_is_rate_limited_per_license_and_ip(): void
+    {
+        $license = $this->createLicense(
+            status: 'active',
+            domain: 'company-a.test',
+        );
+
+        $license->update([
+            'license_key' => 'BIZZ-TEST-RATE-AAAA-BBBB',
+        ]);
+
+        for ($attempt = 1; $attempt <= 10; $attempt++) {
+            $this
+                ->postJson('/api/licenses/validate', [
+                    'license_key' => $license->license_key,
+                    'domain' => 'company-a.test',
+                ])
+                ->assertOk();
+        }
+
+        $this
+            ->postJson('/api/licenses/validate', [
+                'license_key' => $license->license_key,
+                'domain' => 'company-a.test',
+            ])
+            ->assertStatus(429)
+            ->assertJson([
+                'valid' => false,
+                'status' => 'rate_limited',
+            ]);
+    }
+
     private function createLicense(
         string $status,
         ?string $domain,
