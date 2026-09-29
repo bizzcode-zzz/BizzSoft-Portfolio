@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProductLicense;
+use App\Models\ProductLicenseActivity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +31,8 @@ class LicenseActivationController extends Controller
 
         return DB::transaction(function () use (
             $licenseKey,
-            $domain
+            $domain,
+            $request
         ): JsonResponse {
             $license = ProductLicense::query()
                 ->where('license_key', $licenseKey)
@@ -38,6 +40,19 @@ class LicenseActivationController extends Controller
                 ->first();
 
             if (! $license) {
+                ProductLicenseActivity::create([
+                    'product_license_id' => null,
+                    'event' => 'invalid_license',
+                    'attempted_domain' => $domain,
+                    'license_key_fingerprint' => hash(
+                        'sha256',
+                        $licenseKey
+                    ),
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'http_status' => 404,
+                ]);
+
                 return response()->json([
                     'valid' => false,
                     'status' => 'invalid_license',
@@ -45,6 +60,19 @@ class LicenseActivationController extends Controller
             }
 
             if ($license->status === 'revoked') {
+                ProductLicenseActivity::create([
+                    'product_license_id' => $license->id,
+                    'event' => 'revoked_attempt',
+                    'attempted_domain' => $domain,
+                    'license_key_fingerprint' => hash(
+                        'sha256',
+                        $licenseKey
+                    ),
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'http_status' => 403,
+                ]);
+
                 return response()->json([
                     'valid' => false,
                     'status' => 'revoked',
@@ -56,6 +84,19 @@ class LicenseActivationController extends Controller
                 $license->production_domain !== null &&
                 $license->production_domain !== $domain
             ) {
+                ProductLicenseActivity::create([
+                    'product_license_id' => $license->id,
+                    'event' => 'domain_mismatch',
+                    'attempted_domain' => $domain,
+                    'license_key_fingerprint' => hash(
+                        'sha256',
+                        $licenseKey
+                    ),
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'http_status' => 409,
+                ]);
+
                 return response()->json([
                     'valid' => false,
                     'status' => 'domain_mismatch',
@@ -70,6 +111,19 @@ class LicenseActivationController extends Controller
                     'activated_at' => now(),
                     'last_validated_at' => now(),
                 ])->save();
+
+                ProductLicenseActivity::create([
+                    'product_license_id' => $license->id,
+                    'event' => 'activation_success',
+                    'attempted_domain' => $domain,
+                    'license_key_fingerprint' => hash(
+                        'sha256',
+                        $licenseKey
+                    ),
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'http_status' => 200,
+                ]);
             } else {
                 $license->forceFill([
                     'status' => 'active',

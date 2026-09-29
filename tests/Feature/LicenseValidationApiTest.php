@@ -164,6 +164,108 @@ class LicenseValidationApiTest extends TestCase
             ]);
     }
 
+    public function test_successful_validation_is_logged(): void
+    {
+        $license = $this->createLicense(
+            status: 'active',
+            domain: 'company-a.test',
+        );
+
+        $this
+            ->postJson('/api/licenses/validate', [
+                'license_key' => $license->license_key,
+                'domain' => 'company-a.test',
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseHas('product_license_activities', [
+            'product_license_id' => $license->id,
+            'event' => 'validation_success',
+            'attempted_domain' => 'company-a.test',
+            'license_key_fingerprint' => hash(
+                'sha256',
+                $license->license_key
+            ),
+            'http_status' => 200,
+        ]);
+    }
+
+    public function test_domain_mismatch_is_logged(): void
+    {
+        $license = $this->createLicense(
+            status: 'active',
+            domain: 'company-a.test',
+        );
+
+        $this
+            ->postJson('/api/licenses/validate', [
+                'license_key' => $license->license_key,
+                'domain' => 'company-b.test',
+            ])
+            ->assertStatus(409);
+
+        $this->assertDatabaseHas('product_license_activities', [
+            'product_license_id' => $license->id,
+            'event' => 'domain_mismatch',
+            'attempted_domain' => 'company-b.test',
+            'license_key_fingerprint' => hash(
+                'sha256',
+                $license->license_key
+            ),
+            'http_status' => 409,
+        ]);
+    }
+
+    public function test_revoked_validation_attempt_is_logged(): void
+    {
+        $license = $this->createLicense(
+            status: 'revoked',
+            domain: 'company-a.test',
+            revoked: true,
+        );
+
+        $this
+            ->postJson('/api/licenses/validate', [
+                'license_key' => $license->license_key,
+                'domain' => 'company-a.test',
+            ])
+            ->assertStatus(403);
+
+        $this->assertDatabaseHas('product_license_activities', [
+            'product_license_id' => $license->id,
+            'event' => 'revoked_attempt',
+            'attempted_domain' => 'company-a.test',
+            'license_key_fingerprint' => hash(
+                'sha256',
+                $license->license_key
+            ),
+            'http_status' => 403,
+        ]);
+    }
+
+    public function test_invalid_license_validation_attempt_is_logged(): void
+    {
+        $licenseKey = 'BIZZ-INVALID-LOGG-AAAA-BBBB';
+
+        $this
+            ->postJson('/api/licenses/validate', [
+                'license_key' => $licenseKey,
+                'domain' => 'unknown-company.test',
+            ])
+            ->assertStatus(404);
+
+        $this->assertDatabaseHas('product_license_activities', [
+            'product_license_id' => null,
+            'event' => 'invalid_license',
+            'attempted_domain' => 'unknown-company.test',
+            'license_key_fingerprint' => hash(
+                'sha256',
+                $licenseKey
+            ),
+            'http_status' => 404,
+        ]);
+    }
+
     private function createLicense(
         string $status,
         ?string $domain,
