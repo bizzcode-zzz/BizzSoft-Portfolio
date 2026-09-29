@@ -193,6 +193,19 @@ export default function Index({ licenses = [] }) {
                                                         license.activated_at,
                                                     )}
                                                 </p>
+
+                                                <div className="mt-2 border-t border-gray-800 pt-2">
+                                                    <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                                                        Last Validated
+                                                    </p>
+                                                    <p className="mt-1 whitespace-nowrap text-xs text-gray-400">
+                                                        {license.last_validated_at
+                                                            ? formatDate(
+                                                                  license.last_validated_at,
+                                                              )
+                                                            : 'Never'}
+                                                    </p>
+                                                </div>
                                             </td>
 
                                             <td className="px-5 py-4 align-middle">
