@@ -15,7 +15,9 @@ class ProductLicense extends Model
         'production_domain',
         'activated_at',
         'last_validated_at',
-        'deactivated_at',
+        'revoked_at',
+        'revoked_by',
+        'revocation_reason',
     ];
 
     protected function casts(): array
@@ -23,7 +25,7 @@ class ProductLicense extends Model
         return [
             'activated_at' => 'datetime',
             'last_validated_at' => 'datetime',
-            'deactivated_at' => 'datetime',
+            'revoked_at' => 'datetime',
         ];
     }
 
@@ -38,5 +40,13 @@ class ProductLicense extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function revoker(): BelongsTo
+    {
+        return $this->belongsTo(
+            User::class,
+            'revoked_by'
+        );
     }
 }

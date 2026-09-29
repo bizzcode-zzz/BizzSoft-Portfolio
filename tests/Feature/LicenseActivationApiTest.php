@@ -110,4 +110,74 @@ class LicenseActivationApiTest extends TestCase
             $license->production_domain
         );
     }
+
+    public function test_revoked_license_cannot_be_activated_again(): void
+    {
+        $customer = User::factory()->create();
+
+        $product = Product::create([
+            'name' => 'BizzSoft V5',
+            'slug' => 'bizzsoft-v5',
+            'short_description' => 'Business management software.',
+            'description' => 'Revoked license activation test.',
+            'price' => 20000,
+            'status' => ProductStatus::Active,
+            'version' => '5',
+        ]);
+
+        $order = Order::create([
+            'order_number' => 'BS-LICENSE-REVOKED-0001',
+            'user_id' => $customer->id,
+            'product_id' => $product->id,
+            'product_name_snapshot' => $product->name,
+            'product_version_snapshot' => $product->version,
+            'price_snapshot' => $product->price,
+            'status' => OrderStatus::Completed,
+            'ordered_at' => now(),
+        ]);
+
+        $ownership = ProductOwnership::create([
+            'user_id' => $customer->id,
+            'product_id' => $product->id,
+            'order_id' => $order->id,
+            'starting_release_id' => null,
+            'granted_by' => null,
+            'granted_at' => now(),
+        ]);
+
+        $license = ProductLicense::create([
+            'product_ownership_id' => $ownership->id,
+            'order_id' => $order->id,
+            'license_key' => 'BIZZ-TEST-RVOK-AAAA-BBBB',
+            'status' => 'revoked',
+            'production_domain' => 'company-a.test',
+            'activated_at' => now()->subDay(),
+            'last_validated_at' => now()->subDay(),
+            'revoked_at' => now(),
+        ]);
+
+        $this
+            ->postJson('/api/licenses/activate', [
+                'license_key' => $license->license_key,
+                'domain' => 'company-a.test',
+            ])
+            ->assertStatus(403)
+            ->assertJson([
+                'valid' => false,
+                'status' => 'revoked',
+                'domain' => 'company-a.test',
+            ]);
+
+        $this
+            ->postJson('/api/licenses/activate', [
+                'license_key' => $license->license_key,
+                'domain' => 'company-b.test',
+            ])
+            ->assertStatus(403)
+            ->assertJson([
+                'valid' => false,
+                'status' => 'revoked',
+                'domain' => 'company-a.test',
+            ]);
+    }
 }

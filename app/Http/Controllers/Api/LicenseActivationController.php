@@ -44,6 +44,14 @@ class LicenseActivationController extends Controller
                 ], 404);
             }
 
+            if ($license->status === 'revoked') {
+                return response()->json([
+                    'valid' => false,
+                    'status' => 'revoked',
+                    'domain' => $license->production_domain,
+                ], 403);
+            }
+
             if (
                 $license->production_domain !== null &&
                 $license->production_domain !== $domain
@@ -61,7 +69,6 @@ class LicenseActivationController extends Controller
                     'production_domain' => $domain,
                     'activated_at' => now(),
                     'last_validated_at' => now(),
-                    'deactivated_at' => null,
                 ])->save();
             } else {
                 $license->forceFill([

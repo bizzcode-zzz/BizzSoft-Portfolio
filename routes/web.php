@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\CustomizationSecureAccessCloseController;
 use App\Http\Controllers\Admin\CustomizationSecureAccessController as AdminCustomizationSecureAccessController;
 use App\Http\Controllers\Admin\CustomizationSecureAccessHandoffController;
 use App\Http\Controllers\Admin\CustomizationSecureAccessRevealController;
+use App\Http\Controllers\Admin\LicenseController as AdminLicenseController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductReleaseController as AdminProductReleaseController;
@@ -472,6 +473,24 @@ Route::middleware('auth')->group(function () {
                 [AdminOrderController::class, 'updateStatus']
             )
                 ->name('orders.status.update');
+
+              /*
+              |--------------------------------------------------------------------------
+              | Admin Licenses
+              |--------------------------------------------------------------------------
+              */
+
+              Route::get(
+                  '/licenses',
+                  [AdminLicenseController::class, 'index']
+              )
+                  ->name('licenses.index');
+
+              Route::patch(
+                  '/licenses/{productLicense}/revoke',
+                  [AdminLicenseController::class, 'revoke']
+              )
+                  ->name('licenses.revoke');
 
             /*
             |--------------------------------------------------------------------------

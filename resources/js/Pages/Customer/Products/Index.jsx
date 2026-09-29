@@ -116,13 +116,15 @@ export default function Index({ ownedProducts = [] }) {
                                                             className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${
                                                                 license.status === 'active'
                                                                     ? 'bg-emerald-500/10 text-emerald-300 ring-emerald-500/20'
+                                                                    : license.status === 'revoked'
+                                                                      ? 'bg-red-500/10 text-red-300 ring-red-500/20'
                                                                     : 'bg-gray-500/10 text-gray-300 ring-gray-500/20'
                                                             }`}
                                                         >
                                                             {license.status === 'active'
                                                                 ? 'Active'
-                                                                : license.status === 'deactivated'
-                                                                  ? 'Deactivated'
+                                                                : license.status === 'revoked'
+                                                                  ? 'Revoked'
                                                                   : 'Not Activated'}
                                                         </span>
                                                     </div>
