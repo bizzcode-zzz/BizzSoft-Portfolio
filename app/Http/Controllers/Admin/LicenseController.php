@@ -20,6 +20,9 @@ class LicenseController extends Controller
                 'ownership.user:id,name,email',
                 'ownership.product:id,name,slug',
                 'revoker:id,name,email',
+                'activities' => fn ($query) => $query
+                    ->latest('id')
+                    ->limit(5),
             ])
             ->latest('id')
             ->get()
@@ -50,6 +53,18 @@ class LicenseController extends Controller
                     'name' => $license->ownership->user->name,
                     'email' => $license->ownership->user->email,
                 ],
+
+                'activities' => $license->activities
+                    ->map(fn ($activity) => [
+                        'id' => $activity->id,
+                        'event' => $activity->event,
+                        'attempted_domain' => $activity->attempted_domain,
+                        'ip_address' => $activity->ip_address,
+                        'http_status' => $activity->http_status,
+                        'created_at' => $activity->created_at,
+                    ])
+                    ->values()
+                    ->all(),
 
                 'product' => [
                     'id' => $license->ownership->product->id,
