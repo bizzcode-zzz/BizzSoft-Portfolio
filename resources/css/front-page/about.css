@@ -254,7 +254,6 @@
         );
 
     backdrop-filter: blur(22px);
-    -webkit-backdrop-filter: blur(22px);
 
     box-shadow:
         inset 0 1px 0

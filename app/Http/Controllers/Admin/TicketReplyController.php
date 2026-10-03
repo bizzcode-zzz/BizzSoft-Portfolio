@@ -23,13 +23,24 @@ class TicketReplyController extends Controller
             'message' => ['required', 'string', 'max:5000'],
         ]);
 
-        DB::transaction(function () use ($request, $ticket, $validated) {
-            $ticket->replies()->create([
+        DB::transaction(function () use ($request, $ticket, $validated): void {
+            $lockedTicket = Ticket::query()
+                ->whereKey($ticket->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->authorize('update', $lockedTicket);
+
+            if ($lockedTicket->status === TicketStatus::Closed) {
+                abort(422, 'Closed tickets cannot receive replies.');
+            }
+
+            $lockedTicket->replies()->create([
                 'user_id' => $request->user()->id,
                 'message' => $validated['message'],
             ]);
 
-            $ticket->update([
+            $lockedTicket->update([
                 'status' => TicketStatus::WaitingForCustomer,
             ]);
         });

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductOwnership;
 use App\Models\ProductRelease;
+use App\Payments\PaymentEntitlements;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -41,6 +42,10 @@ class ProductReleaseDownloadController extends Controller
 
         if (! $this->isReleaseEntitled($productRelease, $ownership)) {
             abort(404);
+        }
+
+        if (! app(PaymentEntitlements::class)->ownershipHasUnheldPurchase($ownership)) {
+            abort(403, 'This purchase is unavailable. Contact support for payment review.');
         }
 
         $disk = Storage::disk('local');

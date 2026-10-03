@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Enums\CustomizationRequestStatus;
+use App\Models\CustomizationMessage;
 use App\Models\CustomizationRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -59,9 +61,9 @@ class CustomerCustomizationRequestTest extends TestCase
 
         $response->assertInertia(fn ($page) => $page
             ->component('Customer/Customizations/Index')
-            ->has('customizationRequests', 1)
-            ->where('customizationRequests.0.id', $ownRequest->id)
-            ->where('customizationRequests.0.title', 'My Customization')
+            ->has('customizationRequests.data', 1)
+            ->where('customizationRequests.data.0.id', $ownRequest->id)
+            ->where('customizationRequests.data.0.title', 'My Customization')
         );
 
         $this->assertNotSame($ownRequest->id, $otherRequest->id);
@@ -224,6 +226,234 @@ class CustomerCustomizationRequestTest extends TestCase
         );
     }
 
+    public function test_customer_conversation_history_is_paginated(): void
+    {
+        $customer = User::factory()->create();
+        $customer->assignRole('customer');
+
+        $customizationRequest = CustomizationRequest::factory()->create([
+            'user_id' => $customer->id,
+        ]);
+
+        foreach (range(1, 55) as $number) {
+            CustomizationMessage::factory()->create([
+                'customization_request_id' => $customizationRequest->id,
+                'user_id' => $customer->id,
+                'message' => "Message {$number}",
+            ]);
+        }
+
+        $this
+            ->actingAs($customer)
+            ->get(route('customizations.show', $customizationRequest))
+            ->assertOk()
+            ->assertInertia(
+                fn (Assert $page) => $page
+                    ->component('Customer/Customizations/Show')
+                    ->has('messageHistory.data', 50)
+                    ->where('messageHistory.current_page', 1)
+                    ->where('messageHistory.data.0.message', 'Message 6')
+                    ->where('messageHistory.data.49.message', 'Message 55')
+            );
+
+        $this
+            ->actingAs($customer)
+            ->get(
+                route('customizations.show', $customizationRequest)
+                    .'?messages_page=2'
+            )
+            ->assertOk()
+            ->assertInertia(
+                fn (Assert $page) => $page
+                    ->component('Customer/Customizations/Show')
+                    ->has('messageHistory.data', 5)
+                    ->where('messageHistory.current_page', 2)
+                    ->where('messageHistory.data.0.message', 'Message 1')
+                    ->where('messageHistory.data.4.message', 'Message 5')
+            );
+    }
+    public function test_customer_marks_only_visible_incoming_messages_as_read(): void
+    {
+        $customer = User::factory()->create();
+        $customer->assignRole('customer');
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $customizationRequest = CustomizationRequest::factory()->create([
+            'user_id' => $customer->id,
+        ]);
+
+        foreach (range(1, 55) as $number) {
+            CustomizationMessage::factory()->create([
+                'customization_request_id' => $customizationRequest->id,
+                'user_id' => $admin->id,
+                'message' => "Unread admin message {$number}",
+                'read_at' => null,
+            ]);
+        }
+
+        $this
+            ->actingAs($customer)
+            ->get(route('customizations.show', $customizationRequest))
+            ->assertOk();
+
+        $this->assertSame(
+            50,
+            CustomizationMessage::query()
+                ->where('customization_request_id', $customizationRequest->id)
+                ->whereNotNull('read_at')
+                ->count()
+        );
+
+        $this->assertSame(
+            5,
+            CustomizationMessage::query()
+                ->where('customization_request_id', $customizationRequest->id)
+                ->whereNull('read_at')
+                ->count()
+        );
+
+        $this
+            ->actingAs($customer)
+            ->get(
+                route('customizations.show', $customizationRequest)
+                    .'?messages_page=2'
+            )
+            ->assertOk();
+
+        $this->assertSame(
+            55,
+            CustomizationMessage::query()
+                ->where('customization_request_id', $customizationRequest->id)
+                ->whereNotNull('read_at')
+                ->count()
+        );
+
+        $this->assertSame(
+            0,
+            CustomizationMessage::query()
+                ->where('customization_request_id', $customizationRequest->id)
+                ->whereNull('read_at')
+                ->count()
+        );
+    }
+    public function test_customer_payment_summary_respects_active_hold_and_restoration(): void
+    {
+        $customer = User::factory()->create();
+        $customer->assignRole('customer');
+
+        $customizationRequest = CustomizationRequest::factory()->create([
+            'user_id' => $customer->id,
+            'status' => CustomizationRequestStatus::Accepted,
+        ]);
+
+        $quote = $customizationRequest->quote()->create([
+            'price' => '100.00',
+            'scope' => 'Hold-aware customer payment summary.',
+            'estimated_delivery' => now()
+                ->addWeek()
+                ->toDateString(),
+        ]);
+
+        $payment = $quote->payments()->create([
+            'payment_number' => 'PAY-CUSTOMER-HOLD-SUMMARY-001',
+            'user_id' => $customer->id,
+            'amount' => '100.00',
+            'currency' => 'USD',
+            'provider' => 'paddle',
+            'provider_payment_id' => 'txn_customer_hold_summary_001',
+            'status' => \App\Enums\PaymentStatus::Verified,
+            'submitted_at' => now(),
+            'verified_at' => now(),
+        ]);
+
+        $adjustment = \App\Models\PaymentAdjustment::create([
+            'provider' => 'paddle',
+            'provider_adjustment_id' => 'adj_customer_hold_summary_001',
+            'provider_transaction_id' => $payment->provider_payment_id,
+            'payment_id' => $payment->id,
+            'order_id' => null,
+            'provider_updated_at' => now(),
+            'last_event_id' => 'evt_customer_hold_summary_001',
+            'snapshot' => [],
+            'history' => [],
+            'hold_active' => true,
+            'review_required' => false,
+            'decision' => 'automatic_hold',
+        ]);
+
+        $this
+            ->actingAs($customer)
+            ->get(
+                route(
+                    'customizations.show',
+                    $customizationRequest
+                )
+            )
+            ->assertOk()
+            ->assertInertia(
+                fn (Assert $page) => $page
+                    ->where(
+                        'paymentSummary.verified_amount',
+                        '100.00'
+                    )
+                    ->where(
+                        'paymentSummary.remaining_amount',
+                        '0.00'
+                    )
+                    ->where(
+                        'paymentSummary.fully_paid',
+                        true
+                    )
+                    ->where(
+                        'paymentSummary.has_active_hold',
+                        true
+                    )
+                    ->where(
+                        'paymentSummary.fully_paid_and_unheld',
+                        false
+                    )
+            );
+
+        $adjustment->update([
+            'hold_active' => false,
+            'decision' => 'restored',
+        ]);
+
+        $this
+            ->actingAs($customer)
+            ->get(
+                route(
+                    'customizations.show',
+                    $customizationRequest
+                )
+            )
+            ->assertOk()
+            ->assertInertia(
+                fn (Assert $page) => $page
+                    ->where(
+                        'paymentSummary.verified_amount',
+                        '100.00'
+                    )
+                    ->where(
+                        'paymentSummary.remaining_amount',
+                        '0.00'
+                    )
+                    ->where(
+                        'paymentSummary.fully_paid',
+                        true
+                    )
+                    ->where(
+                        'paymentSummary.has_active_hold',
+                        false
+                    )
+                    ->where(
+                        'paymentSummary.fully_paid_and_unheld',
+                        true
+                    )
+            );
+    }
     public function test_customer_cannot_view_another_customers_request(): void
     {
         $customer = User::factory()->create();

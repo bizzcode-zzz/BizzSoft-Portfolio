@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CustomizationDevelopmentController;
 use App\Http\Controllers\Admin\CustomizationQuoteController as AdminCustomizationQuoteController;
+use App\Http\Controllers\Admin\CustomizationPaymentRecoveryController;
 use App\Http\Controllers\Admin\CustomizationRequestController as AdminCustomizationRequestController;
 use App\Http\Controllers\Admin\CustomizationRequestInformationController as AdminCustomizationRequestInformationController;
 use App\Http\Controllers\Admin\CustomizationRequestStatusController as AdminCustomizationRequestStatusController;
@@ -11,6 +12,8 @@ use App\Http\Controllers\Admin\CustomizationSecureAccessHandoffController;
 use App\Http\Controllers\Admin\CustomizationSecureAccessRevealController;
 use App\Http\Controllers\Admin\LicenseController as AdminLicenseController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\PaymentAdjustmentController;
+use App\Http\Controllers\Admin\PaymentWebhookEventController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductReleaseController as AdminProductReleaseController;
 use App\Http\Controllers\Admin\TicketController as AdminTicketController;
@@ -20,9 +23,9 @@ use App\Http\Controllers\Admin\TicketSecureAccessController as AdminTicketSecure
 use App\Http\Controllers\Admin\TicketSecureAccessHandoffController as AdminTicketSecureAccessHandoffController;
 use App\Http\Controllers\Admin\TicketSecureAccessRevealController as AdminTicketSecureAccessRevealController;
 use App\Http\Controllers\Admin\TicketStatusController as AdminTicketStatusController;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\Http\Controllers\Customer\PaymentController as CustomerPaymentController;
 use App\Http\Controllers\Customer\ProductLibraryController;
@@ -68,14 +71,15 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisteredUserController::class, 'create'])
         ->name('register');
 
-    Route::post('/register', [RegisteredUserController::class, 'store']);
+    Route::post('/register', [RegisteredUserController::class, 'store'])
+        ->middleware('throttle:registration');
 
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 
-    Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+    Route::post('/login', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('throttle:login');
 });
-
 
 Route::post(
     '/webhooks/paddle',
@@ -256,6 +260,12 @@ Route::middleware('auth')->group(function () {
             [CustomizationQuoteDecisionController::class, 'decline']
         )
             ->name('customizations.quote.decline');
+
+        Route::post(
+            '/customizations/{customizationRequest}/payment/checkout',
+            [CustomerPaymentController::class, 'createCustomizationCheckout']
+        )
+            ->name('customizations.payment.checkout');
 
         Route::post(
             '/customizations/{customizationRequest}/request-revision',
@@ -449,6 +459,11 @@ Route::middleware('auth')->group(function () {
                 [CustomizationDevelopmentController::class, 'resume']
             )
                 ->name('customizations.resume-development');
+            Route::post(
+                '/customizations/{customizationRequest}/recover-payment',
+                [CustomizationPaymentRecoveryController::class, 'store']
+            )
+                ->name('customizations.recover-payment');
 
             /*
             |--------------------------------------------------------------------------
@@ -474,23 +489,52 @@ Route::middleware('auth')->group(function () {
             )
                 ->name('orders.status.update');
 
-              /*
-              |--------------------------------------------------------------------------
-              | Admin Licenses
-              |--------------------------------------------------------------------------
-              */
+            Route::post(
+                '/orders/{order}/recover-payment',
+                [AdminOrderController::class, 'recoverPaidCancellation']
+            )->name('orders.recover-payment');
 
-              Route::get(
-                  '/licenses',
-                  [AdminLicenseController::class, 'index']
-              )
-                  ->name('licenses.index');
+            /*
+            |--------------------------------------------------------------------------
+            | Admin Payment Webhook Events
+            |--------------------------------------------------------------------------
+            */
 
-              Route::patch(
-                  '/licenses/{productLicense}/revoke',
-                  [AdminLicenseController::class, 'revoke']
-              )
-                  ->name('licenses.revoke');
+            Route::get('/payment-adjustments', [PaymentAdjustmentController::class, 'index'])
+                ->name('payment-adjustments.index');
+            Route::get('/payment-adjustments/{paymentAdjustment}', [PaymentAdjustmentController::class, 'show'])
+                ->name('payment-adjustments.show');
+            Route::post('/payment-adjustments/{paymentAdjustment}/decision', [PaymentAdjustmentController::class, 'update'])
+                ->name('payment-adjustments.update');
+
+            Route::get(
+                '/payment-webhook-events',
+                [PaymentWebhookEventController::class, 'index']
+            )
+                ->name('payment-webhook-events.index');
+
+            Route::get(
+                '/payment-webhook-events/{paymentWebhookEvent}',
+                [PaymentWebhookEventController::class, 'show']
+            )
+                ->name('payment-webhook-events.show');
+            /*
+            |--------------------------------------------------------------------------
+            | Admin Licenses
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get(
+                '/licenses',
+                [AdminLicenseController::class, 'index']
+            )
+                ->name('licenses.index');
+
+            Route::patch(
+                '/licenses/{productLicense}/revoke',
+                [AdminLicenseController::class, 'revoke']
+            )
+                ->name('licenses.revoke');
 
             /*
             |--------------------------------------------------------------------------
@@ -550,6 +594,79 @@ Route::middleware('auth')->group(function () {
         ->name('logout');
 });
 
+/*
+|--------------------------------------------------------------------------
+| Sensitive Route Rate Limits
+|--------------------------------------------------------------------------
+|
+| Keep normal navigation unthrottled. Only abuse-sensitive actions and
+| credential reveals receive route-specific limits.
+|
+*/
+
+$sensitiveRouteRateLimits = [
+    // Commerce initiation / checkout.
+    'customer.orders.store' => 'checkout',
+    'customer.orders.payment.checkout' => 'checkout',
+    'customizations.payment.checkout' => 'checkout',
+
+    // Purchased product downloads.
+    'customer.products.releases.download' => 'downloads',
+
+    // Customer support and customization writes.
+    'tickets.store' => 'support-writes',
+    'tickets.replies.store' => 'support-writes',
+    'customizations.store' => 'support-writes',
+    'customizations.cancel' => 'support-writes',
+    'customizations.replies.store' => 'support-writes',
+    'customizations.messages.store' => 'support-writes',
+    'customizations.quote.accept' => 'support-writes',
+    'customizations.quote.decline' => 'support-writes',
+    'customizations.request-revision' => 'support-writes',
+    'customizations.approve' => 'support-writes',
+
+    // Admin support and customization lifecycle writes.
+    'admin.tickets.replies.store' => 'support-writes',
+    'admin.tickets.resolve' => 'support-writes',
+    'admin.tickets.close' => 'support-writes',
+    'admin.customizations.start-review' => 'support-writes',
+    'admin.customizations.decline' => 'support-writes',
+    'admin.customizations.request-information' => 'support-writes',
+    'admin.customizations.messages.store' => 'support-writes',
+    'admin.customizations.quote.store' => 'support-writes',
+    'admin.customizations.start-development' => 'support-writes',
+    'admin.customizations.ready-for-review' => 'support-writes',
+    'admin.customizations.resume-development' => 'support-writes',
+    'admin.customizations.recover-payment' => 'support-writes',
+
+    // Secure credential submission, handoff, reveal and close.
+    'tickets.secure-access.submit' => 'secure-access',
+    'tickets.secure-access.reveal' => 'secure-access',
+    'customizations.secure-access.submit' => 'secure-access',
+    'customizations.secure-access.reveal' => 'secure-access',
+    'admin.tickets.secure-access.store' => 'secure-access',
+    'admin.tickets.secure-access.handoff' => 'secure-access',
+    'admin.tickets.secure-access.reveal' => 'secure-access',
+    'admin.tickets.secure-access.close' => 'secure-access',
+    'admin.customizations.secure-access.store' => 'secure-access',
+    'admin.customizations.secure-access.handoff' => 'secure-access',
+    'admin.customizations.secure-access.reveal' => 'secure-access',
+    'admin.customizations.secure-access.close' => 'secure-access',
+];
+
+Route::getRoutes()->refreshNameLookups();
+
+foreach ($sensitiveRouteRateLimits as $routeName => $limiter) {
+    $route = Route::getRoutes()->getByName($routeName);
+
+    if ($route === null) {
+        throw new LogicException(
+            "Unable to attach rate limiter: route [{$routeName}] does not exist."
+        );
+    }
+
+    $route->middleware("throttle:{$limiter}");
+}
 
 Route::view('/paddle/checkout', 'paddle.checkout')
     ->name('paddle.checkout');

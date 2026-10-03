@@ -10,15 +10,15 @@ use App\Models\Product;
 use App\Models\User;
 use App\Payments\Contracts\PaymentGateway;
 use App\Payments\Data\CheckoutSession;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use RuntimeException;
 use Spatie\Permission\Models\Role;
+use Tests\Support\UsesCheckoutDatabase;
 use Tests\TestCase;
 
 class CustomerPaddleCheckoutTest extends TestCase
 {
-    use RefreshDatabase;
+    use UsesCheckoutDatabase;
 
     public function test_customer_can_create_paddle_checkout_for_own_awaiting_payment_order(): void
     {
@@ -111,8 +111,7 @@ class CustomerPaddleCheckoutTest extends TestCase
             'provider' => 'paddle',
             'status' => PaymentStatus::Pending,
             'metadata' => [
-                'checkout_url' =>
-                    'https://sandbox-checkout.example.test/reuse',
+                'checkout_url' => 'https://sandbox-checkout.example.test/reuse',
             ],
         ]);
 
@@ -157,7 +156,7 @@ class CustomerPaddleCheckoutTest extends TestCase
         );
     }
 
-    public function test_failed_gateway_checkout_marks_local_payment_failed(): void
+    public function test_unknown_gateway_failure_keeps_local_payment_reserved(): void
     {
         $customer = $this->createCustomer();
         $order = $this->createOrder($customer);
@@ -198,13 +197,13 @@ class CustomerPaddleCheckoutTest extends TestCase
             ->firstOrFail();
 
         $this->assertSame(
-            PaymentStatus::Failed,
+            PaymentStatus::Pending,
             $payment->status
         );
 
         $this->assertSame(
-            'Payment checkout could not be created.',
-            $payment->notes
+            'outcome_unknown',
+            data_get($payment->metadata, 'checkout_reservation.state')
         );
     }
 
@@ -215,6 +214,7 @@ class CustomerPaddleCheckoutTest extends TestCase
         $order = $this->createOrder($owner);
 
         $gateway = Mockery::mock(PaymentGateway::class);
+        $gateway->shouldReceive('provider')->andReturn('paddle');
 
         $gateway
             ->shouldNotReceive('createCheckout');
@@ -257,20 +257,17 @@ class CustomerPaddleCheckoutTest extends TestCase
         $product = Product::create([
             'name' => 'BizzSoft V5',
             'slug' => 'bizzsoft-v5-'.str()->random(8),
-            'short_description' =>
-                'Business management software.',
-            'description' =>
-                'BizzSoft product test record.',
+            'short_description' => 'Business management software.',
+            'description' => 'BizzSoft product test record.',
             'price' => 349,
             'status' => ProductStatus::Active,
             'version' => '5',
         ]);
 
         return Order::create([
-            'order_number' =>
-                'BS-CHECKOUT-'.str()->upper(
-                    str()->random(8)
-                ),
+            'order_number' => 'BS-CHECKOUT-'.str()->upper(
+                str()->random(8)
+            ),
             'user_id' => $customer->id,
             'product_id' => $product->id,
             'product_name_snapshot' => $product->name,

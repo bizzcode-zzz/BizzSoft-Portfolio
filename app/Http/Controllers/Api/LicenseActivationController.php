@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Licensing\ProductionDomain;
+use App\Models\Order;
 use App\Models\ProductLicense;
 use App\Models\ProductLicenseActivity;
+use App\Payments\PaymentEntitlements;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class LicenseActivationController extends Controller
 {
@@ -19,6 +23,11 @@ class LicenseActivationController extends Controller
                 'string',
                 'max:100',
             ],
+            'product_key' => [
+                'required',
+                'string',
+                'uuid',
+            ],
             'domain' => [
                 'required',
                 'string',
@@ -27,17 +36,62 @@ class LicenseActivationController extends Controller
         ]);
 
         $licenseKey = strtoupper(trim($validated['license_key']));
-        $domain = strtolower(trim($validated['domain']));
+        $productKey = strtolower(trim($validated['product_key']));
+        $domain = ProductionDomain::normalize($validated['domain']);
+
+        if ($domain === null) {
+            throw ValidationException::withMessages([
+                'domain' => 'The domain must be a valid production hostname.',
+            ]);
+        }
 
         return DB::transaction(function () use (
             $licenseKey,
+            $productKey,
             $domain,
             $request
         ): JsonResponse {
-            $license = ProductLicense::query()
-                ->where('license_key', $licenseKey)
-                ->lockForUpdate()
-                ->first();
+            $hint = ProductLicense::query()->where('license_key', $licenseKey)->first();
+            if ($hint) {
+                $order = Order::query()->whereKey($hint->order_id)->lockForUpdate()->first();
+                if (! $order) {
+                    return response()->json(['valid' => false, 'status' => 'invalid_purchase'], 403);
+                }
+                $order->payments()->orderBy('id')->lockForUpdate()->get();
+
+                $product = $order->product()->first();
+
+                if (! $product) {
+                    return response()->json([
+                        'valid' => false,
+                        'status' => 'invalid_purchase',
+                    ], 403);
+                }
+
+                if ($product->license_product_key !== $productKey) {
+                    ProductLicenseActivity::create([
+                        'product_license_id' => $hint->id,
+                        'event' => 'product_mismatch',
+                        'attempted_domain' => $domain,
+                        'license_key_fingerprint' => hash(
+                            'sha256',
+                            $licenseKey
+                        ),
+                        'ip_address' => $request->ip(),
+                        'user_agent' => $request->userAgent(),
+                        'http_status' => 404,
+                    ]);
+
+                    return response()->json([
+                        'valid' => false,
+                        'status' => 'invalid_license',
+                    ], 404);
+                }
+            }
+            $license = ProductLicense::query()->where('license_key', $licenseKey)->lockForUpdate()->first();
+            if ($license && (! $hint || $license->order_id !== $hint->order_id)) {
+                return response()->json(['valid' => false, 'status' => 'purchase_changed'], 409);
+            }
 
             if (! $license) {
                 ProductLicenseActivity::create([
@@ -78,6 +132,17 @@ class LicenseActivationController extends Controller
                     'status' => 'revoked',
                     'domain' => $license->production_domain,
                 ], 403);
+            }
+
+            if (app(PaymentEntitlements::class)->orderIsHeld($license->order_id)) {
+                ProductLicenseActivity::create([
+                    'product_license_id' => $license->id, 'event' => 'payment_hold_attempt',
+                    'attempted_domain' => $domain,
+                    'license_key_fingerprint' => hash('sha256', $licenseKey),
+                    'ip_address' => $request->ip(), 'user_agent' => $request->userAgent(), 'http_status' => 403,
+                ]);
+
+                return response()->json(['valid' => false, 'status' => 'payment_hold'], 403);
             }
 
             if (

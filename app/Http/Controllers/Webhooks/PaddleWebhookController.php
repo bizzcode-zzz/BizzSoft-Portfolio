@@ -11,6 +11,7 @@ use Paddle\SDK\Entities\Event;
 use Paddle\SDK\Notifications\Secret;
 use Paddle\SDK\Notifications\Verifier;
 use RuntimeException;
+use Throwable;
 
 final class PaddleWebhookController extends Controller
 {
@@ -35,10 +36,16 @@ final class PaddleWebhookController extends Controller
             $request->getContent(),
         );
 
-        $verified = (new Verifier())->verify(
-            $psrRequest,
-            new Secret($webhookSecret)
-        );
+        try {
+            $verified = (new Verifier)->verify(
+                $psrRequest,
+                new Secret($webhookSecret)
+            );
+        } catch (Throwable) {
+            // Signature data is untrusted input. Malformed headers must be
+            // rejected without becoming application errors or log noise.
+            $verified = false;
+        }
 
         if (! $verified) {
             return response()->json([

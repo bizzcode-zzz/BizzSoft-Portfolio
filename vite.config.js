@@ -4,8 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-    // Explicitly tell Vite where public assets are located
-    publicDir: 'public',
+    publicDir: false,
 
     plugins: [
         laravel({

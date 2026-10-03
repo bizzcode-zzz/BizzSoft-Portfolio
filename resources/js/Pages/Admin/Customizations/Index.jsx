@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import Pagination from '../../../Components/Pagination';
 import AdminLayout from '../../../Layouts/AdminLayout';
 
 function statusLabel(status) {
@@ -46,6 +47,8 @@ function statusClasses(status) {
 }
 
 export default function Index({ customizationRequests }) {
+    const requestRows = customizationRequests?.data ?? [];
+
     return (
         <AdminLayout>
             <Head title="Customization Requests" />
@@ -66,7 +69,7 @@ export default function Index({ customizationRequests }) {
                     </p>
                 </div>
 
-                {customizationRequests.length === 0 ? (
+                {requestRows.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-gray-700 bg-gray-900 p-10 text-center">
                         <h2 className="font-semibold text-white">
                             No customization requests
@@ -79,7 +82,7 @@ export default function Index({ customizationRequests }) {
                 ) : (
                     <div className="overflow-hidden rounded-xl border border-gray-800 bg-gray-900">
                         <div className="divide-y divide-gray-800">
-                            {customizationRequests.map((request) => (
+                            {requestRows.map((request) => (
                                 <Link
                                     key={request.id}
                                     href={`/admin/customizations/${request.id}`}
@@ -135,6 +138,11 @@ export default function Index({ customizationRequests }) {
                         </div>
                     </div>
                 )}
+
+                <Pagination
+                    paginator={customizationRequests}
+                    label="requests"
+                />
             </div>
         </AdminLayout>
     );

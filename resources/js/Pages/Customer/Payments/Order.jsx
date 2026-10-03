@@ -31,7 +31,7 @@ export default function Order({
 
     const formatDate = (date) => {
         if (!date) {
-            return '—';
+            return '-';
         }
 
         return new Intl.DateTimeFormat('en-PH', {
@@ -65,7 +65,7 @@ export default function Order({
 
     const version = order.product_version
         ? `v${String(order.product_version).replace(/^v/i, '')}`
-        : '—';
+        : '-';
 
     const providerLabel =
         checkout_provider === 'paddle'
@@ -218,9 +218,9 @@ export default function Order({
                                         </p>
 
                                         <p className="mt-1 text-sm text-gray-400">
-                                            {payment.provider ?? '—'}
+                                            {payment.provider ?? '-'}
                                             {payment.method
-                                                ? ` · ${payment.method}`
+                                                ? ` \u00B7 ${payment.method}`
                                                 : ''}
                                         </p>
 

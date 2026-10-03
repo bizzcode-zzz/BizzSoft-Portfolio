@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ProductLicense;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use App\Models\ProductLicense;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,8 +25,8 @@ class LicenseController extends Controller
                     ->limit(5),
             ])
             ->latest('id')
-            ->get()
-            ->map(fn (ProductLicense $license) => [
+            ->paginate(25)
+            ->through(fn (ProductLicense $license) => [
                 'id' => $license->id,
 
                 'license_key' => $license->license_key,
@@ -71,16 +71,12 @@ class LicenseController extends Controller
                     'name' => $license->ownership->product->name,
                     'slug' => $license->ownership->product->slug,
                 ],
-            ])
-            ->values()
-            ->all();
+            ]);
 
         return Inertia::render('Admin/Licenses/Index', [
             'licenses' => $licenses,
         ]);
     }
-
-
 
     public function revoke(
         Request $request,

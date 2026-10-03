@@ -1,7 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
+import Pagination from '../../../Components/Pagination';
 import CustomerLayout from '../../../Layouts/CustomerLayout';
 
 export default function Index({ tickets }) {
+    const ticketRows = tickets?.data ?? [];
+
     const statusLabels = {
         waiting_for_admin: 'Waiting for Admin',
         waiting_for_customer: 'Waiting for Customer',
@@ -46,7 +49,7 @@ export default function Index({ tickets }) {
                     </div>
 
                     <div className="mt-8">
-                        {tickets.length === 0 ? (
+                        {ticketRows.length === 0 ? (
                             <div className="rounded-xl border border-gray-800 bg-gray-900 p-8">
                                 <h2 className="text-lg font-semibold">
                                     No support tickets yet
@@ -65,7 +68,7 @@ export default function Index({ tickets }) {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {tickets.map((ticket) => (
+                                {ticketRows.map((ticket) => (
                                     <Link
                                         key={ticket.id}
                                         href={`/tickets/${ticket.id}`}
@@ -108,6 +111,8 @@ export default function Index({ tickets }) {
                             </div>
                         )}
                     </div>
+
+                    <Pagination paginator={tickets} label="tickets" />
                 </div>
             </CustomerLayout>
         </>

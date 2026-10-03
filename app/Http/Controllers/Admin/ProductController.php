@@ -243,7 +243,8 @@ class ProductController extends Controller
             'price' => [
                 'required',
                 'numeric',
-                'min:0',
+                'decimal:0,2',
+                'gt:0',
             ],
 
             'status' => [

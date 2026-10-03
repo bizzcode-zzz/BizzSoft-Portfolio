@@ -150,7 +150,7 @@ export default function Index({ products }) {
                                                         rel="noreferrer"
                                                         className="inline-flex flex-1 items-center justify-center rounded-lg border border-neutral-700 px-4 py-2.5 text-sm font-semibold text-neutral-200 transition hover:border-neutral-600 hover:bg-neutral-800"
                                                     >
-                                                        Live Demo ?
+                                                        Live Demo &#8599;
                                                     </a>
                                                 )}
                                             </div>

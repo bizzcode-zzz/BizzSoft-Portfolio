@@ -9,7 +9,7 @@ use RuntimeException;
 
 final class PaddleClientFactory
 {
-    public function make(): Client
+    public function make(int $retries = 1): Client
     {
         $apiKey = trim((string) config('paddle.api_key'));
 
@@ -24,11 +24,11 @@ final class PaddleClientFactory
         return match ($environment) {
             'sandbox' => new Client(
                 apiKey: $apiKey,
-                options: new Options(Environment::SANDBOX),
+                options: new Options(Environment::SANDBOX, retries: $retries),
             ),
-
             'production' => new Client(
                 apiKey: $apiKey,
+                options: new Options(Environment::PRODUCTION, retries: $retries),
             ),
 
             default => throw new RuntimeException(

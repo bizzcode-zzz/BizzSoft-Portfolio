@@ -26,8 +26,9 @@ class TicketController extends Controller
                         });
                 },
             ])
-            ->latest()
-            ->get();
+            ->latest('created_at')
+            ->latest('id')
+            ->paginate(25);
 
         return Inertia::render('Customer/Tickets/Index', [
             'tickets' => $tickets,
@@ -74,11 +75,11 @@ class TicketController extends Controller
             ]);
 
         $ticket->load([
-            'replies' => fn($query) => $query
+            'replies' => fn ($query) => $query
                 ->with('user:id,name')
                 ->oldest(),
 
-            'secureAccesses' => fn($query) => $query
+            'secureAccesses' => fn ($query) => $query
                 ->select([
                     'id',
                     'ticket_id',

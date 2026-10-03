@@ -30,7 +30,7 @@ class CustomizationQuoteController extends Controller
         );
 
         $validated = $request->validate([
-            'price' => ['required', 'numeric', 'gt:0', 'max:9999999999.99'],
+            'price' => ['required', 'numeric', 'decimal:0,2', 'gt:0', 'max:9999999999.99'],
             'scope' => ['required', 'string', 'max:10000'],
             'estimated_delivery' => ['required', 'date', 'after:today'],
         ]);
@@ -39,13 +39,32 @@ class CustomizationQuoteController extends Controller
             $customizationRequest,
             $validated
         ): void {
-            $customizationRequest->quote()->create([
+            $lockedRequest = CustomizationRequest::query()
+                ->whereKey($customizationRequest->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->authorize('update', $lockedRequest);
+
+            abort_unless(
+                $lockedRequest->status === CustomizationRequestStatus::UnderReview,
+                422,
+                'A quotation can only be sent while the customization request is under review.'
+            );
+
+            abort_if(
+                $lockedRequest->quote()->exists(),
+                422,
+                'This customization request already has a quotation.'
+            );
+
+            $lockedRequest->quote()->create([
                 'price' => $validated['price'],
                 'scope' => $validated['scope'],
                 'estimated_delivery' => $validated['estimated_delivery'],
             ]);
 
-            $customizationRequest->update([
+            $lockedRequest->update([
                 'status' => CustomizationRequestStatus::QuoteSent,
             ]);
         });

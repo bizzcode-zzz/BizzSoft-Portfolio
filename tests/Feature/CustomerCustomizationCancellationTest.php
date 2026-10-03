@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Enums\CustomizationRequestStatus;
+use App\Enums\PaymentStatus;
+use App\Models\CustomizationQuote;
 use App\Models\CustomizationRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -53,6 +55,125 @@ class CustomerCustomizationCancellationTest extends TestCase
     {
         $this->assertCustomerCanCancelFromStatus(
             CustomizationRequestStatus::Accepted
+        );
+    }
+
+    public function test_customer_cannot_cancel_accepted_request_with_verified_payment(): void
+    {
+        $customer = $this->makeCustomer();
+
+        $customizationRequest = CustomizationRequest::factory()->create([
+            'user_id' => $customer->id,
+            'status' => CustomizationRequestStatus::Accepted,
+        ]);
+
+        $quote = CustomizationQuote::factory()->create([
+            'customization_request_id' => $customizationRequest->id,
+            'price' => '100.00',
+        ]);
+
+        $quote->payments()->create([
+            'payment_number' => 'PAY-CANCEL-VERIFIED-001',
+            'user_id' => $customer->id,
+            'amount' => '100.00',
+            'currency' => 'USD',
+            'provider' => 'paddle',
+            'provider_payment_id' => 'txn_cancel_verified',
+            'status' => PaymentStatus::Verified,
+            'verified_at' => now(),
+        ]);
+
+        $this->actingAs($customer)
+            ->patch(route('customizations.cancel', $customizationRequest))
+            ->assertStatus(422);
+
+        $this->assertSame(
+            CustomizationRequestStatus::Accepted,
+            $customizationRequest->fresh()->status
+        );
+    }
+
+    public function test_customer_cannot_cancel_accepted_request_with_active_paddle_checkout(): void
+    {
+        $customer = $this->makeCustomer();
+
+        $customizationRequest = CustomizationRequest::factory()->create([
+            'user_id' => $customer->id,
+            'status' => CustomizationRequestStatus::Accepted,
+        ]);
+
+        $quote = CustomizationQuote::factory()->create([
+            'customization_request_id' => $customizationRequest->id,
+            'price' => '100.00',
+        ]);
+
+        $quote->payments()->create([
+            'payment_number' => 'PAY-CANCEL-READY-001',
+            'user_id' => $customer->id,
+            'amount' => '100.00',
+            'currency' => 'USD',
+            'provider' => 'paddle',
+            'provider_payment_id' => 'txn_cancel_ready',
+            'status' => PaymentStatus::Pending,
+            'metadata' => [
+                'checkout_reservation' => [
+                    'token' => 'cancel-test-token',
+                    'state' => 'ready',
+                    'started_at' => now()->toIso8601String(),
+                ],
+            ],
+        ]);
+
+        $this->actingAs($customer)
+            ->patch(route('customizations.cancel', $customizationRequest))
+            ->assertStatus(422);
+
+        $this->assertSame(
+            CustomizationRequestStatus::Accepted,
+            $customizationRequest->fresh()->status
+        );
+    }
+
+    public function test_customer_can_cancel_after_checkout_is_proven_not_dispatched(): void
+    {
+        $customer = $this->makeCustomer();
+
+        $customizationRequest = CustomizationRequest::factory()->create([
+            'user_id' => $customer->id,
+            'status' => CustomizationRequestStatus::Accepted,
+        ]);
+
+        $quote = CustomizationQuote::factory()->create([
+            'customization_request_id' => $customizationRequest->id,
+            'price' => '100.00',
+        ]);
+
+        $quote->payments()->create([
+            'payment_number' => 'PAY-CANCEL-FAILED-001',
+            'user_id' => $customer->id,
+            'amount' => '100.00',
+            'currency' => 'USD',
+            'provider' => 'paddle',
+            'provider_payment_id' => null,
+            'status' => PaymentStatus::Failed,
+            'metadata' => [
+                'checkout_reservation' => [
+                    'token' => 'cancel-confirmed-failed-token',
+                    'state' => 'confirmed_failed',
+                    'started_at' => now()->toIso8601String(),
+                ],
+            ],
+        ]);
+
+        $this->actingAs($customer)
+            ->patch(route('customizations.cancel', $customizationRequest))
+            ->assertRedirect(
+                route('customizations.show', $customizationRequest)
+            );
+
+        $this->assertSame(
+            CustomizationRequestStatus::Cancelled,
+            $customizationRequest->fresh()->status
         );
     }
 

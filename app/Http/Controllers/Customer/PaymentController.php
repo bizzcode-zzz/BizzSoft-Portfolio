@@ -5,8 +5,12 @@ namespace App\Http\Controllers\Customer;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
+use App\Models\CustomizationRequest;
 use App\Models\Order;
+use App\Payments\CheckoutReservations;
 use App\Payments\Contracts\PaymentGateway;
+use App\Payments\Exceptions\CheckoutNotDispatched;
+use App\Payments\Exceptions\CheckoutProviderRejected;
 use App\Payments\PaymentNumberGenerator;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -81,104 +85,166 @@ class PaymentController extends Controller
         Request $request,
         Order $order,
         PaymentGateway $gateway,
-        PaymentNumberGenerator $paymentNumbers
+        PaymentNumberGenerator $paymentNumbers,
+        CheckoutReservations $reservations
     ): HttpResponse {
-        $verifiedAmount = $this->verifiedAmountForOrder(
-            $request,
-            $order
+        [$payment, $mayDispatch] = $reservations->reserve(
+            $order, $request->user()->id, $gateway->provider(), $paymentNumbers
         );
 
-        $remainingAmount = max(
-            (float) $order->price_snapshot
-            - (float) $verifiedAmount,
-            0
-        );
+        if (! $mayDispatch) {
+            $url = data_get($payment->metadata, 'checkout_url');
+            $state = data_get($payment->metadata, 'checkout_reservation.state');
+            if (($state === null || $state === 'ready') && filled($url)
+                && in_array($payment->status, [PaymentStatus::Pending, PaymentStatus::Processing], true)) {
+                return Inertia::location($url);
+            }
 
-        abort_if(
-            $remainingAmount <= 0,
-            422,
-            'This order has already been fully paid.'
-        );
+            abort(409, 'Checkout is being prepared or requires reconciliation. No new payment was created.');
+        }
 
-        $existingPayment = $order
-            ->payments()
-            ->where('provider', $gateway->provider())
-            ->whereIn('status', [
-                PaymentStatus::Pending->value,
-                PaymentStatus::Processing->value,
-            ])
-            ->latest()
-            ->first();
+        // The reservation has committed. No database transaction spans this provider call.
+        try {
+            $checkout = $gateway->createCheckout($payment, $this->checkoutDescriptionForOrder($payment->payable));
+        } catch (Throwable $exception) {
+            report($exception);
 
-        $existingCheckoutUrl = data_get(
-            $existingPayment?->metadata,
-            'checkout_url'
-        );
+            $confirmedFailure =
+                $exception instanceof CheckoutNotDispatched
+                || $exception instanceof CheckoutProviderRejected;
 
-        if (
-            is_string($existingCheckoutUrl) &&
-            trim($existingCheckoutUrl) !== ''
-        ) {
-            return Inertia::location(
-                $existingCheckoutUrl
+            $reservations->fail($payment, $confirmedFailure);
+
+            abort(
+                502,
+                match (true) {
+                    $exception instanceof CheckoutNotDispatched =>
+                        'Checkout could not be started. Please try again.',
+                    $exception instanceof CheckoutProviderRejected =>
+                        'Checkout was rejected by the payment provider. Please contact support before trying again.',
+                    default =>
+                        'Checkout outcome is uncertain. Please contact support; do not submit another payment.',
+                }
             );
         }
 
-        $payment = $order->payments()->create([
-            'payment_number' => $paymentNumbers->generate(),
-            'user_id' => $request->user()->id,
-            'amount' => number_format(
-                $remainingAmount,
-                2,
-                '.',
-                ''
-            ),
-            'currency' => 'USD',
-            'provider' => $gateway->provider(),
-            'method' => null,
-            'status' => PaymentStatus::Pending,
-            'metadata' => [
-                'source' => 'order_checkout',
-            ],
-        ]);
+        // If this save fails, the durable creating reservation still prevents a second POST.
+        $payment = $reservations->finalize($payment, $checkout);
+        abort_unless(filled(data_get($payment->metadata, 'checkout_url')), 409,
+            'Checkout requires reconciliation. No new payment will be created.');
+
+        return Inertia::location($payment->metadata['checkout_url']);
+    }
+
+    public function createCustomizationCheckout(
+        Request $request,
+        CustomizationRequest $customizationRequest,
+        PaymentGateway $gateway,
+        PaymentNumberGenerator $paymentNumbers,
+        CheckoutReservations $reservations
+    ): HttpResponse {
+        $this->authorize('update', $customizationRequest);
+
+        $quote = $customizationRequest
+            ->quote()
+            ->first();
+
+        abort_unless(
+            $quote,
+            422,
+            'This customization request does not have a quotation.'
+        );
+
+        [$payment, $mayDispatch] =
+            $reservations->reserveCustomizationQuote(
+                $quote,
+                $request->user()->id,
+                $gateway->provider(),
+                $paymentNumbers
+            );
+
+        if (! $mayDispatch) {
+            $url = data_get(
+                $payment->metadata,
+                'checkout_url'
+            );
+
+            $state = data_get(
+                $payment->metadata,
+                'checkout_reservation.state'
+            );
+
+            if (
+                ($state === null || $state === 'ready')
+                && filled($url)
+                && in_array(
+                    $payment->status,
+                    [
+                        PaymentStatus::Pending,
+                        PaymentStatus::Processing,
+                    ],
+                    true
+                )
+            ) {
+                return Inertia::location($url);
+            }
+
+            abort(
+                409,
+                'Checkout is being prepared or requires reconciliation. No new payment was created.'
+            );
+        }
 
         try {
             $checkout = $gateway->createCheckout(
                 $payment,
-                $this->checkoutDescriptionForOrder($order)
-            );
-
-            $payment->update([
-                'provider_payment_id' =>
-                    $checkout->providerPaymentId,
-
-                'metadata' => array_merge(
-                    $payment->metadata ?? [],
-                    $checkout->metadata,
-                    [
-                        'checkout_url' =>
-                            $checkout->checkoutUrl,
-                    ]
-                ),
-            ]);
-
-            return Inertia::location(
-                $checkout->checkoutUrl
+                sprintf(
+                    'BizzSoft Customization - Request #%d',
+                    $customizationRequest->id
+                )
             );
         } catch (Throwable $exception) {
             report($exception);
 
-            $payment->update([
-                'status' => PaymentStatus::Failed,
-                'notes' =>
-                    'Payment checkout could not be created.',
-            ]);
+            $confirmedFailure =
+                $exception instanceof CheckoutNotDispatched
+                || $exception instanceof CheckoutProviderRejected;
+
+            $reservations->fail(
+                $payment,
+                $confirmedFailure
+            );
 
             abort(
                 502,
-                'Unable to start payment checkout. Please try again.'
+                match (true) {
+                    $exception instanceof CheckoutNotDispatched =>
+                        'Checkout could not be started. Please try again.',
+                    $exception instanceof CheckoutProviderRejected =>
+                        'Checkout was rejected by the payment provider. Please contact support before trying again.',
+                    default =>
+                        'Checkout outcome is uncertain. Please contact support; do not submit another payment.',
+                }
             );
         }
+
+        $payment = $reservations->finalize(
+            $payment,
+            $checkout
+        );
+
+        abort_unless(
+            filled(data_get(
+                $payment->metadata,
+                'checkout_url'
+            )),
+            409,
+            'Checkout requires reconciliation. No new payment will be created.'
+        );
+
+        return Inertia::location(
+            $payment->metadata['checkout_url']
+        );
     }
 
     private function verifiedAmountForOrder(

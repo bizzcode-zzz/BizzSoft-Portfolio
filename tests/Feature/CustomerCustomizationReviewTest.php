@@ -171,6 +171,22 @@ class CustomerCustomizationReviewTest extends TestCase
             'status' => CustomizationRequestStatus::ReadyForReview,
         ]);
 
+        $quote = \App\Models\CustomizationQuote::factory()->create([
+            'customization_request_id' => $customizationRequest->id,
+        ]);
+
+        $quote->payments()->create([
+            'payment_number' => 'PAY-REVIEW-APPROVE-001',
+            'user_id' => $customer->id,
+            'amount' => $quote->price,
+            'currency' => 'USD',
+            'provider' => 'manual',
+            'method' => 'bank_transfer',
+            'status' => \App\Enums\PaymentStatus::Verified,
+            'submitted_at' => now(),
+            'verified_at' => now(),
+        ]);
+
         $response = $this
             ->actingAs($customer)
             ->patch(
@@ -187,6 +203,88 @@ class CustomerCustomizationReviewTest extends TestCase
         ]);
     }
 
+    public function test_customer_can_leave_optional_final_note_when_approving(): void
+    {
+        $customer = User::factory()->create();
+        $customer->assignRole('customer');
+
+        $customizationRequest = CustomizationRequest::factory()->create([
+            'user_id' => $customer->id,
+            'status' => CustomizationRequestStatus::ReadyForReview,
+        ]);
+
+        $quote = \App\Models\CustomizationQuote::factory()->create([
+            'customization_request_id' => $customizationRequest->id,
+        ]);
+
+        $quote->payments()->create([
+            'payment_number' => 'PAY-REVIEW-FINAL-NOTE-001',
+            'user_id' => $customer->id,
+            'amount' => $quote->price,
+            'currency' => 'USD',
+            'provider' => 'manual',
+            'method' => 'bank_transfer',
+            'status' => \App\Enums\PaymentStatus::Verified,
+            'submitted_at' => now(),
+            'verified_at' => now(),
+        ]);
+
+        $response = $this
+            ->actingAs($customer)
+            ->patch(
+                "/customizations/{$customizationRequest->id}/approve",
+                [
+                    'message' => 'Thank you, everything looks good.',
+                ]
+            );
+
+        $response->assertRedirect(
+            route('customizations.show', $customizationRequest)
+        );
+
+        $this->assertDatabaseHas('customization_requests', [
+            'id' => $customizationRequest->id,
+            'status' => CustomizationRequestStatus::Completed->value,
+        ]);
+
+        $this->assertDatabaseHas('customization_messages', [
+            'customization_request_id' => $customizationRequest->id,
+            'user_id' => $customer->id,
+            'message' => 'Thank you, everything looks good.',
+        ]);
+    }
+
+    public function test_customer_final_note_cannot_exceed_5000_characters(): void
+    {
+        $customer = User::factory()->create();
+        $customer->assignRole('customer');
+
+        $customizationRequest = CustomizationRequest::factory()->create([
+            'user_id' => $customer->id,
+            'status' => CustomizationRequestStatus::ReadyForReview,
+        ]);
+
+        $response = $this
+            ->actingAs($customer)
+            ->patch(
+                "/customizations/{$customizationRequest->id}/approve",
+                [
+                    'message' => str_repeat('A', 5001),
+                ]
+            );
+
+        $response->assertSessionHasErrors('message');
+
+        $this->assertDatabaseHas('customization_requests', [
+            'id' => $customizationRequest->id,
+            'status' => CustomizationRequestStatus::ReadyForReview->value,
+        ]);
+
+        $this->assertDatabaseMissing('customization_messages', [
+            'customization_request_id' => $customizationRequest->id,
+            'user_id' => $customer->id,
+        ]);
+    }
     public function test_customer_cannot_approve_another_customers_request(): void
     {
         $owner = User::factory()->create();
@@ -293,6 +391,22 @@ class CustomerCustomizationReviewTest extends TestCase
         $customizationRequest = CustomizationRequest::factory()->create([
             'user_id' => $customer->id,
             'status' => CustomizationRequestStatus::ReadyForReview,
+        ]);
+
+        $quote = \App\Models\CustomizationQuote::factory()->create([
+            'customization_request_id' => $customizationRequest->id,
+        ]);
+
+        $quote->payments()->create([
+            'payment_number' => 'PAY-REVIEW-APPROVE-002',
+            'user_id' => $customer->id,
+            'amount' => $quote->price,
+            'currency' => 'USD',
+            'provider' => 'manual',
+            'method' => 'bank_transfer',
+            'status' => \App\Enums\PaymentStatus::Verified,
+            'submitted_at' => now(),
+            'verified_at' => now(),
         ]);
 
         $firstResponse = $this

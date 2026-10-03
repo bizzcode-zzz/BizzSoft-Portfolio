@@ -32,12 +32,25 @@ class CustomizationRequestInformationController extends Controller
             $customizationRequest,
             $validated
         ): void {
-            $customizationRequest->messages()->create([
+            $lockedRequest = CustomizationRequest::query()
+                ->whereKey($customizationRequest->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->authorize('update', $lockedRequest);
+
+            abort_unless(
+                $lockedRequest->status === CustomizationRequestStatus::UnderReview,
+                422,
+                'Information can only be requested while the customization request is under review.'
+            );
+
+            $lockedRequest->messages()->create([
                 'user_id' => $request->user()->id,
                 'message' => $validated['message'],
             ]);
 
-            $customizationRequest->update([
+            $lockedRequest->update([
                 'status' => CustomizationRequestStatus::NeedsInformation,
             ]);
         });

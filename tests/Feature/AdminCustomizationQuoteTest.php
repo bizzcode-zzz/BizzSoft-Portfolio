@@ -134,6 +134,50 @@ class AdminCustomizationQuoteTest extends TestCase
         );
     }
 
+    public function test_sub_cent_quote_price_is_rejected(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $customizationRequest = CustomizationRequest::factory()->create([
+            'status' => CustomizationRequestStatus::UnderReview,
+        ]);
+
+        $this
+            ->actingAs($admin)
+            ->from(
+                route(
+                    'admin.customizations.show',
+                    $customizationRequest
+                )
+            )
+            ->post(
+                "/admin/customizations/{$customizationRequest->id}/quote",
+                [
+                    'price' => '0.001',
+                    'scope' => 'Valid quotation scope.',
+                    'estimated_delivery' =>
+                        now()->addWeek()->toDateString(),
+                ]
+            )
+            ->assertRedirect(
+                route(
+                    'admin.customizations.show',
+                    $customizationRequest
+                )
+            )
+            ->assertSessionHasErrors('price');
+
+        $this->assertDatabaseCount(
+            'customization_quotes',
+            0
+        );
+
+        $this->assertSame(
+            CustomizationRequestStatus::UnderReview,
+            $customizationRequest->fresh()->status
+        );
+    }
     public function test_scope_is_required(): void
     {
         $admin = User::factory()->create();

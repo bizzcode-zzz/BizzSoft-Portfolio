@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import Pagination from '../../../Components/Pagination';
 import CustomerLayout from '../../../Layouts/CustomerLayout';
 
 function statusLabel(status) {
@@ -46,6 +47,8 @@ function statusClasses(status) {
 }
 
 export default function Index({ customizationRequests }) {
+    const requestRows = customizationRequests?.data ?? [];
+
     return (
         <CustomerLayout>
             <Head title="Customization Requests" />
@@ -75,7 +78,7 @@ export default function Index({ customizationRequests }) {
                     </Link>
                 </div>
 
-                {customizationRequests.length === 0 ? (
+                {requestRows.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-gray-700 bg-gray-900 px-6 py-12 text-center">
                         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 text-xl text-gray-300">
                             ⚙
@@ -101,7 +104,7 @@ export default function Index({ customizationRequests }) {
                 ) : (
                     <div className="overflow-hidden rounded-xl border border-gray-800 bg-gray-900">
                         <div className="divide-y divide-gray-800">
-                            {customizationRequests.map((request) => (
+                            {requestRows.map((request) => (
                                 <Link
                                     key={request.id}
                                     href={`/customizations/${request.id}`}
@@ -153,6 +156,11 @@ export default function Index({ customizationRequests }) {
                         </div>
                     </div>
                 )}
+
+                <Pagination
+                    paginator={customizationRequests}
+                    label="requests"
+                />
             </div>
         </CustomerLayout>
     );

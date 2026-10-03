@@ -90,6 +90,62 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('dashboard'));
     }
 
+    public function test_customer_login_returns_to_intended_customization_creation_page(): void
+    {
+        $user = User::factory()->create([
+            'password' => 'password',
+        ]);
+
+        $user->assignRole('customer');
+
+        $this
+            ->get(route('customizations.create'))
+            ->assertRedirect(route('login'));
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
+
+        $response->assertRedirect(
+            route('customizations.create')
+        );
+    }
+
+    public function test_customer_registration_returns_to_intended_customization_creation_page(): void
+    {
+        $this
+            ->get(route('customizations.create'))
+            ->assertRedirect(route('login'));
+
+        $this
+            ->get(route('register'))
+            ->assertOk();
+
+        $response = $this->post('/register', [
+            'name' => 'CTA Customer',
+            'email' => 'cta-customer@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+
+        $response->assertRedirect(
+            route('customizations.create')
+        );
+
+        $user = User::where(
+            'email',
+            'cta-customer@example.com'
+        )->firstOrFail();
+
+        $this->assertTrue(
+            $user->hasRole('customer')
+        );
+    }
     public function test_users_cannot_authenticate_with_invalid_password(): void
     {
         $user = User::factory()->create([

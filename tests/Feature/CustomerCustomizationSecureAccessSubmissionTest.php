@@ -4,12 +4,15 @@ namespace Tests\Feature;
 
 use App\Enums\CustomizationSecureAccessDirection;
 use App\Enums\CustomizationSecureAccessStatus;
+use App\Http\Controllers\CustomizationSecureAccessSubmissionController;
 use App\Models\CustomizationRequest;
 use App\Models\CustomizationSecureAccess;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class CustomerCustomizationSecureAccessSubmissionTest extends TestCase
@@ -357,5 +360,83 @@ class CustomerCustomizationSecureAccessSubmissionTest extends TestCase
         );
 
         $response->assertRedirect('/login');
+    }
+
+    public function test_stale_requested_instance_cannot_reopen_secure_access_after_admin_closed_it(): void
+    {
+        $customer = User::factory()->create();
+        $customer->assignRole('customer');
+
+        $customizationRequest = CustomizationRequest::factory()->create([
+            'user_id' => $customer->id,
+        ]);
+
+        $secureAccess = CustomizationSecureAccess::factory()->create([
+            'customization_request_id' => $customizationRequest->id,
+            'direction' => CustomizationSecureAccessDirection::CustomerToAdmin,
+            'status' => CustomizationSecureAccessStatus::Requested,
+            'login_url' => null,
+            'username' => null,
+            'secret' => null,
+            'notes' => null,
+            'submitted_at' => null,
+            'viewed_at' => null,
+            'closed_at' => null,
+        ]);
+
+        $staleSecureAccess = $secureAccess;
+
+        CustomizationSecureAccess::query()
+            ->whereKey($secureAccess->id)
+            ->firstOrFail()
+            ->update([
+                'login_url' => null,
+                'username' => null,
+                'secret' => null,
+                'notes' => null,
+                'status' => CustomizationSecureAccessStatus::Closed,
+                'closed_at' => now(),
+            ]);
+
+        $this->actingAs($customer);
+
+        $request = Request::create(
+            '/test-customization-secure-access-submit',
+            'POST',
+            [
+                'login_url' => 'https://example.test/login',
+                'username' => 'stale-user',
+                'secret' => 'must-not-be-saved',
+                'notes' => 'Must not reopen a closed record.',
+            ]
+        );
+
+        try {
+            app(CustomizationSecureAccessSubmissionController::class)
+                ->store(
+                    $request,
+                    $customizationRequest,
+                    $staleSecureAccess
+                );
+
+            $this->fail(
+                'A stale requested secure-access instance reopened a closed record.'
+            );
+        } catch (HttpException $exception) {
+            $this->assertSame(422, $exception->getStatusCode());
+        }
+
+        $freshSecureAccess = $secureAccess->fresh();
+
+        $this->assertSame(
+            CustomizationSecureAccessStatus::Closed,
+            $freshSecureAccess->status
+        );
+        $this->assertNull($freshSecureAccess->login_url);
+        $this->assertNull($freshSecureAccess->username);
+        $this->assertNull($freshSecureAccess->secret);
+        $this->assertNull($freshSecureAccess->notes);
+        $this->assertNull($freshSecureAccess->submitted_at);
+        $this->assertNotNull($freshSecureAccess->closed_at);
     }
 }

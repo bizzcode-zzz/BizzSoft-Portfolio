@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import Pagination from '../../../Components/Pagination';
 import AdminLayout from '../../../Layouts/AdminLayout';
 
 const statusClasses = {
@@ -10,6 +11,8 @@ const statusClasses = {
 };
 
 export default function Index({ orders }) {
+    const orderRows = orders?.data ?? [];
+
     const formatPrice = (price) => {
         return new Intl.NumberFormat('en-PH', {
             style: 'currency',
@@ -64,7 +67,14 @@ export default function Index({ orders }) {
                     </p>
                 </div>
 
-                {orders.length === 0 ? (
+                {orderRows.some((order) => order.payment_review?.needs_review) && (
+                    <div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-300">
+                        {orderRows.filter((order) => order.payment_review?.needs_review).length} cancelled order(s)
+                        have verified payments. Open the flagged orders to review payment recovery.
+                    </div>
+                )}
+
+                {orderRows.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-gray-800 bg-gray-900 p-10 text-center">
                         <h2 className="text-lg font-semibold text-white">
                             No orders yet
@@ -121,7 +131,7 @@ export default function Index({ orders }) {
                             </thead>
 
                             <tbody className="divide-y divide-gray-800">
-                                {orders.map((order) => (
+                                {orderRows.map((order) => (
                                     <tr
                                         key={order.id}
                                         className="transition hover:bg-gray-800/40"
@@ -179,6 +189,11 @@ export default function Index({ orders }) {
                                             >
                                                 {order.status_label}
                                             </span>
+                                            {order.payment_review?.needs_review && (
+                                                <p className="mt-2 text-xs font-semibold text-amber-300">
+                                                    Paid — review required
+                                                </p>
+                                            )}
                                         </td>
 
                                         <td className="px-5 py-4 text-right align-middle">
@@ -195,6 +210,8 @@ export default function Index({ orders }) {
                         </table>
                     </div>
                 )}
+
+                <Pagination paginator={orders} label="orders" />
             </div>
         </AdminLayout>
     );

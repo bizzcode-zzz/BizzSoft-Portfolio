@@ -4,9 +4,12 @@ namespace Tests\Feature;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\ProductReleaseStatus;
 use App\Enums\ProductStatus;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductLicense;
+use App\Models\ProductRelease;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -55,7 +58,7 @@ class AdminOrderManagementTest extends TestCase
         $response->assertInertia(
             fn (Assert $page) => $page
                 ->component('Admin/Orders/Index')
-                ->has('orders', 2)
+                ->has('orders.data', 2)
         );
     }
 
@@ -448,7 +451,7 @@ class AdminOrderManagementTest extends TestCase
             'order_id' => $secondOrder->id,
         ]);
 
-        $licenseKeys = \App\Models\ProductLicense::query()
+        $licenseKeys = ProductLicense::query()
             ->orderBy('id')
             ->pluck('license_key');
 
@@ -465,7 +468,7 @@ class AdminOrderManagementTest extends TestCase
         $customer = $this->createCustomer();
         $product = $this->createProduct();
 
-        \App\Models\ProductRelease::create([
+        ProductRelease::create([
             'product_id' => $product->id,
             'created_by' => $admin->id,
             'version' => '5.0.1',
@@ -473,11 +476,11 @@ class AdminOrderManagementTest extends TestCase
             'original_name' => 'bizzsoft-v5.0.1.zip',
             'file_size' => 1000,
             'sha256' => str_repeat('a', 64),
-            'status' => \App\Enums\ProductReleaseStatus::Published,
+            'status' => ProductReleaseStatus::Published,
             'released_at' => now()->subDay(),
         ]);
 
-        $latestRelease = \App\Models\ProductRelease::create([
+        $latestRelease = ProductRelease::create([
             'product_id' => $product->id,
             'created_by' => $admin->id,
             'version' => '5.0.2',
@@ -485,7 +488,7 @@ class AdminOrderManagementTest extends TestCase
             'original_name' => 'bizzsoft-v5.0.2.zip',
             'file_size' => 1000,
             'sha256' => str_repeat('b', 64),
-            'status' => \App\Enums\ProductReleaseStatus::Published,
+            'status' => ProductReleaseStatus::Published,
             'released_at' => now(),
         ]);
 
@@ -526,6 +529,7 @@ class AdminOrderManagementTest extends TestCase
             'starting_release_id' => $latestRelease->id,
         ]);
     }
+
     public function test_admin_cannot_complete_processing_order_without_full_verified_payment(): void
     {
         $admin = $this->createAdmin();

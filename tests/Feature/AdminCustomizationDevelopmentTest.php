@@ -277,6 +277,17 @@ class AdminCustomizationDevelopmentTest extends TestCase
             'status' => CustomizationRequestStatus::InProgress,
         ]);
 
+        $quote = CustomizationQuote::factory()->create([
+            'customization_request_id' => $customizationRequest->id,
+        ]);
+
+        $this->createVerifiedPaymentForQuote(
+            quote: $quote,
+            customer: $customer,
+            admin: $admin,
+            paymentNumber: 'PAY-READY-VERIFIED-001',
+        );
+
         $response = $this
             ->actingAs($admin)
             ->patch(
@@ -357,6 +368,17 @@ class AdminCustomizationDevelopmentTest extends TestCase
             'status' => CustomizationRequestStatus::InProgress,
         ]);
 
+        $quote = CustomizationQuote::factory()->create([
+            'customization_request_id' => $customizationRequest->id,
+        ]);
+
+        $this->createVerifiedPaymentForQuote(
+            quote: $quote,
+            customer: $customer,
+            admin: $admin,
+            paymentNumber: 'PAY-READY-VERIFIED-002',
+        );
+
         $firstResponse = $this
             ->actingAs($admin)
             ->patch(
@@ -393,6 +415,17 @@ class AdminCustomizationDevelopmentTest extends TestCase
             'user_id' => $customer->id,
             'status' => CustomizationRequestStatus::RevisionRequested,
         ]);
+
+        $quote = CustomizationQuote::factory()->create([
+            'customization_request_id' => $customizationRequest->id,
+        ]);
+
+        $this->createVerifiedPaymentForQuote(
+            quote: $quote,
+            customer: $customer,
+            admin: $admin,
+            paymentNumber: 'PAY-RESUME-VERIFIED-001',
+        );
 
         $response = $this
             ->actingAs($admin)
@@ -495,6 +528,17 @@ class AdminCustomizationDevelopmentTest extends TestCase
             'user_id' => $customer->id,
             'status' => CustomizationRequestStatus::RevisionRequested,
         ]);
+
+        $quote = CustomizationQuote::factory()->create([
+            'customization_request_id' => $customizationRequest->id,
+        ]);
+
+        $this->createVerifiedPaymentForQuote(
+            quote: $quote,
+            customer: $customer,
+            admin: $admin,
+            paymentNumber: 'PAY-RESUME-VERIFIED-002',
+        );
 
         $firstResponse = $this
             ->actingAs($admin)

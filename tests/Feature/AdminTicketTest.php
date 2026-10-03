@@ -81,7 +81,7 @@ class AdminTicketTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Admin/Tickets/Index', false)
-                ->has('tickets', 2)
+                ->has('tickets.data', 2)
             );
 
         $response->assertSee('Customer A Ticket');

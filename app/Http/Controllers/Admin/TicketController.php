@@ -25,8 +25,9 @@ class TicketController extends Controller
                         });
                 },
             ])
-            ->latest()
-            ->get();
+            ->latest('created_at')
+            ->latest('id')
+            ->paginate(25);
 
         return Inertia::render('Admin/Tickets/Index', [
             'tickets' => $tickets,

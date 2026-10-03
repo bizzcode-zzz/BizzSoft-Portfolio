@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,8 +21,9 @@ class OrderController extends Controller
         $orders = $request->user()
             ->orders()
             ->latest('ordered_at')
-            ->get()
-            ->map(fn (Order $order) => [
+            ->latest('id')
+            ->paginate(25)
+            ->through(fn (Order $order) => [
                 'id' => $order->id,
                 'order_number' => $order->order_number,
                 'product_name' => $order->product_name_snapshot,
@@ -46,38 +48,49 @@ class OrderController extends Controller
             404
         );
 
-        $existingOrder = Order::query()
-            ->where('user_id', $request->user()->id)
-            ->where('product_id', $product->id)
-            ->where('status', '!=', OrderStatus::Cancelled->value)
-            ->latest('ordered_at')
-            ->first();
+        abort_if(
+            (float) $product->price <= 0,
+            422,
+            'This product is not currently available for purchase.'
+        );
 
-        if ($existingOrder) {
+        return DB::transaction(function () use ($request, $product): RedirectResponse {
+            // The customer exists even when there are no orders to lock yet.
+            $request->user()->newQuery()->whereKey($request->user()->getKey())->lockForUpdate()->firstOrFail();
+
+            $existingOrder = Order::query()
+                ->where('user_id', $request->user()->id)
+                ->where('product_id', $product->id)
+                ->where('status', '!=', OrderStatus::Cancelled->value)
+                ->latest('ordered_at')
+                ->first();
+
+            if ($existingOrder) {
+                return redirect()
+                    ->route('customer.orders.show', $existingOrder)
+                    ->with(
+                        'info',
+                        'You already have an active order for this product.'
+                    );
+            }
+
+            $order = Order::create([
+                'order_number' => $this->generateOrderNumber(),
+                'user_id' => $request->user()->id,
+                'product_id' => $product->id,
+
+                'product_name_snapshot' => $product->name,
+                'product_version_snapshot' => $product->version,
+                'price_snapshot' => $product->price,
+
+                'status' => OrderStatus::AwaitingPayment,
+                'ordered_at' => now(),
+            ]);
+
             return redirect()
-                ->route('customer.orders.show', $existingOrder)
-                ->with(
-                    'info',
-                    'You already have an active order for this product.'
-                );
-        }
-
-        $order = Order::create([
-            'order_number' => $this->generateOrderNumber(),
-            'user_id' => $request->user()->id,
-            'product_id' => $product->id,
-
-            'product_name_snapshot' => $product->name,
-            'product_version_snapshot' => $product->version,
-            'price_snapshot' => $product->price,
-
-            'status' => OrderStatus::AwaitingPayment,
-            'ordered_at' => now(),
-        ]);
-
-        return redirect()
-            ->route('customer.orders.show', $order)
-            ->with('success', 'Your order has been created successfully.');
+                ->route('customer.orders.show', $order)
+                ->with('success', 'Your order has been created successfully.');
+        });
     }
 
     public function show(

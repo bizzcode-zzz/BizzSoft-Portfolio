@@ -80,30 +80,30 @@ class AdminLicenseManagementTest extends TestCase
         $response->assertInertia(
             fn (Assert $page) => $page
                 ->component('Admin/Licenses/Index')
-                ->has('licenses', 1)
+                ->has('licenses.data', 1)
                 ->where(
-                    'licenses.0.license_key',
+                    'licenses.data.0.license_key',
                     'BIZZ-TEST-ADMN-LIC1-0001'
                 )
-                ->where('licenses.0.status', 'active')
+                ->where('licenses.data.0.status', 'active')
                 ->where(
-                    'licenses.0.production_domain',
+                    'licenses.data.0.production_domain',
                     'company-a.test'
                 )
                 ->where(
-                    'licenses.0.order.order_number',
+                    'licenses.data.0.order.order_number',
                     'BS-LICENSE-ADMIN-0001'
                 )
                 ->where(
-                    'licenses.0.customer.email',
+                    'licenses.data.0.customer.email',
                     'license@example.com'
                 )
                 ->where(
-                    'licenses.0.product.name',
+                    'licenses.data.0.product.name',
                     'BizzSoft V5'
                 )
-                ->has('licenses.0.activated_at')
-                ->has('licenses.0.last_validated_at')
+                ->has('licenses.data.0.activated_at')
+                ->has('licenses.data.0.last_validated_at')
         );
     }
 
@@ -190,19 +190,19 @@ class AdminLicenseManagementTest extends TestCase
 
         $response->assertInertia(
             fn (Assert $page) => $page
-                ->has('licenses.0.activities', 5)
+                ->has('licenses.data.0.activities', 5)
                 ->where(
-                    'licenses.0.activities.0.event',
+                    'licenses.data.0.activities.0.event',
                     'validation_success'
                 )
                 ->where(
-                    'licenses.0.activities.4.event',
+                    'licenses.data.0.activities.4.event',
                     'validation_success'
                 )
         );
 
         $activityEvents = collect(
-            $response->inertiaProps()['licenses'][0]['activities']
+            $response->inertiaProps()['licenses']['data'][0]['activities']
         )->pluck('event');
 
         $this->assertFalse(

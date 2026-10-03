@@ -73,6 +73,15 @@ export default function AdminLayout({ children }) {
                         </Link>
 
                         <Link
+                            href="/admin/payment-webhook-events"
+                            className="block rounded-lg px-4 py-3 font-medium text-gray-300 transition hover:bg-gray-800 hover:text-white"
+                        >
+                            Payment Webhooks
+                        </Link>
+                        <Link href="/admin/payment-adjustments" className="block rounded-lg px-4 py-3 font-medium text-gray-300 transition hover:bg-gray-800 hover:text-white">
+                            Payment Adjustments
+                        </Link>
+                        <Link
                             href="/admin/licenses"
                             className="block rounded-lg px-4 py-3 font-medium text-gray-300 transition hover:bg-gray-800 hover:text-white"
                         >

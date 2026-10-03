@@ -4,12 +4,15 @@ namespace Tests\Feature;
 
 use App\Enums\TicketSecureAccessDirection;
 use App\Enums\TicketSecureAccessStatus;
+use App\Http\Controllers\TicketSecureAccessSubmissionController;
 use App\Models\Ticket;
 use App\Models\TicketSecureAccess;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class TicketSecureAccessSubmissionTest extends TestCase
@@ -378,5 +381,71 @@ class TicketSecureAccessSubmissionTest extends TestCase
             $originalStatus,
             $ticket->status
         );
+    }
+
+    public function test_stale_requested_instance_cannot_reopen_secure_access_after_admin_closed_it(): void
+    {
+        $admin = $this->makeAdmin();
+        $customer = $this->makeCustomer();
+
+        $ticket = Ticket::factory()->create([
+            'user_id' => $customer->id,
+        ]);
+
+        $secureAccess = $this->makeRequestedAccess(
+            $ticket,
+            $admin
+        );
+
+        $staleSecureAccess = $secureAccess;
+
+        TicketSecureAccess::query()
+            ->whereKey($secureAccess->id)
+            ->firstOrFail()
+            ->update([
+                'login_url' => null,
+                'username' => null,
+                'secret' => null,
+                'notes' => null,
+                'status' => TicketSecureAccessStatus::Closed,
+                'closed_at' => now(),
+            ]);
+
+        $this->actingAs($customer);
+
+        $request = Request::create(
+            '/test-ticket-secure-access-submit',
+            'POST',
+            [
+                'login_url' => 'https://example.test/login',
+                'username' => 'stale-user',
+                'secret' => 'must-not-be-saved',
+                'notes' => 'Must not reopen a closed record.',
+            ]
+        );
+
+        try {
+            app(TicketSecureAccessSubmissionController::class)
+                ->store($request, $ticket, $staleSecureAccess);
+
+            $this->fail(
+                'A stale requested secure-access instance reopened a closed record.'
+            );
+        } catch (HttpException $exception) {
+            $this->assertSame(422, $exception->getStatusCode());
+        }
+
+        $freshSecureAccess = $secureAccess->fresh();
+
+        $this->assertSame(
+            TicketSecureAccessStatus::Closed,
+            $freshSecureAccess->status
+        );
+        $this->assertNull($freshSecureAccess->login_url);
+        $this->assertNull($freshSecureAccess->username);
+        $this->assertNull($freshSecureAccess->secret);
+        $this->assertNull($freshSecureAccess->notes);
+        $this->assertNull($freshSecureAccess->submitted_at);
+        $this->assertNotNull($freshSecureAccess->closed_at);
     }
 }

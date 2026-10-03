@@ -426,8 +426,6 @@
     backdrop-filter:
         blur(12px);
 
-    -webkit-backdrop-filter:
-        blur(12px);
 }
 
 .hero-button-secondary:hover {
@@ -706,8 +704,6 @@
     backdrop-filter:
         blur(14px);
 
-    -webkit-backdrop-filter:
-        blur(14px);
 
     transition:
         border-color 300ms ease,
@@ -1316,7 +1312,6 @@
         border-radius: 11px;
         z-index: 5;
         backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
     }
 
     .hero-solution-card-idea {

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketSecureAccess;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 
 class TicketSecureAccessCloseController extends Controller
 {
@@ -26,14 +27,33 @@ class TicketSecureAccessCloseController extends Controller
             422
         );
 
-        $secureAccess->update([
-            'login_url' => null,
-            'username' => null,
-            'secret' => null,
-            'notes' => null,
-            'status' => TicketSecureAccessStatus::Closed,
-            'closed_at' => now(),
-        ]);
+        DB::transaction(function () use ($ticket, $secureAccess): void {
+            $lockedSecureAccess = TicketSecureAccess::query()
+                ->whereKey($secureAccess->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            abort_unless(
+                $lockedSecureAccess->ticket_id === $ticket->id,
+                404
+            );
+
+            $this->authorize('close', $lockedSecureAccess);
+
+            abort_unless(
+                $lockedSecureAccess->status !== TicketSecureAccessStatus::Closed,
+                422
+            );
+
+            $lockedSecureAccess->update([
+                'login_url' => null,
+                'username' => null,
+                'secret' => null,
+                'notes' => null,
+                'status' => TicketSecureAccessStatus::Closed,
+                'closed_at' => now(),
+            ]);
+        });
 
         return back();
     }

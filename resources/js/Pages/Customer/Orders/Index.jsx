@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import Pagination from '../../../Components/Pagination';
 import CustomerLayout from '../../../Layouts/CustomerLayout';
 
 const statusClasses = {
@@ -10,6 +11,8 @@ const statusClasses = {
 };
 
 export default function Index({ orders }) {
+    const orderRows = orders?.data ?? [];
+
     const formatPrice = (price) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
@@ -20,7 +23,7 @@ export default function Index({ orders }) {
 
     const formatDate = (date) => {
         if (!date) {
-            return '—';
+            return '-';
         }
 
         return new Intl.DateTimeFormat('en-PH', {
@@ -51,7 +54,7 @@ export default function Index({ orders }) {
                     </p>
                 </div>
 
-                {orders.length === 0 ? (
+                {orderRows.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-gray-800 bg-gray-900 p-10 text-center">
                         <h2 className="text-lg font-semibold text-white">
                             No orders yet
@@ -81,7 +84,7 @@ export default function Index({ orders }) {
                         </div>
 
                         <div className="divide-y divide-gray-800">
-                            {orders.map((order) => (
+                            {orderRows.map((order) => (
                                 <div
                                     key={order.id}
                                     className="grid gap-4 px-6 py-5 lg:grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_auto] lg:items-center"
@@ -120,7 +123,7 @@ export default function Index({ orders }) {
                                                 ? `v${String(
                                                       order.product_version,
                                                   ).replace(/^v/i, '')}`
-                                                : '—'}
+                                                : '-'}
                                         </p>
                                     </div>
 
@@ -162,6 +165,8 @@ export default function Index({ orders }) {
                         </div>
                     </div>
                 )}
+
+                <Pagination paginator={orders} label="orders" />
             </div>
         </CustomerLayout>
     );

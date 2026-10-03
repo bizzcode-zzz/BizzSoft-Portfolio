@@ -207,10 +207,10 @@ class CustomerTicketTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Customer/Tickets/Index')
-                ->has('tickets', 1)
-                ->where('tickets.0.id', $ticketA->id)
-                ->where('tickets.0.subject', 'Customer A Ticket')
-                ->missing('tickets.1')
+                ->has('tickets.data', 1)
+                ->where('tickets.data.0.id', $ticketA->id)
+                ->where('tickets.data.0.subject', 'Customer A Ticket')
+                ->missing('tickets.data.1')
             );
 
         $this->assertNotSame($ticketA->id, $ticketB->id);

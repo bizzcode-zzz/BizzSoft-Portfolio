@@ -16,9 +16,10 @@ class PaddleClientFactoryTest extends TestCase
             'paddle.environment' => 'sandbox',
         ]);
 
-        $client = app(PaddleClientFactory::class)->make();
+        $client = app(PaddleClientFactory::class)->make(retries: 0);
 
         $this->assertInstanceOf(Client::class, $client);
+        $this->assertSame(0, $client->options->retries);
     }
 
     public function test_it_creates_a_production_client(): void
@@ -28,9 +29,10 @@ class PaddleClientFactoryTest extends TestCase
             'paddle.environment' => 'production',
         ]);
 
-        $client = app(PaddleClientFactory::class)->make();
+        $client = app(PaddleClientFactory::class)->make(retries: 0);
 
         $this->assertInstanceOf(Client::class, $client);
+        $this->assertSame(0, $client->options->retries);
     }
 
     public function test_it_rejects_a_missing_api_key(): void

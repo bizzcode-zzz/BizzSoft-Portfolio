@@ -18,6 +18,8 @@ export default function Show({ order, statuses }) {
         status: order.status,
     });
 
+    const recovery = useForm({ reason: '' });
+
     const formatPrice = (price) => {
         return new Intl.NumberFormat('en-PH', {
             style: 'currency',
@@ -101,6 +103,63 @@ export default function Show({ order, statuses }) {
                         </span>
                     </div>
                 </div>
+
+                {order.payment_review?.payment_hold && (
+                    <section className="rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-red-200">
+                        This purchase has an active payment hold. Completion and late-payment recovery are blocked.
+                        <Link className="ml-2 underline" href="/admin/payment-adjustments">Review payment adjustments</Link>
+                    </section>
+                )}
+                {order.payment_review?.needs_review && (
+                    <section className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-6">
+                        <h2 className="text-lg font-semibold text-amber-300">
+                            Cancelled order has verified payment
+                        </h2>
+                        <p className="mt-2 text-sm text-gray-300">
+                            Verified: {formatPrice(order.payment_review.verified_amount)}.
+                            Review the cancellation and any replacement order with the customer.
+                            Recovery moves this order to Processing; completion and access require a separate admin action.
+                        </p>
+                        {order.payment_review.can_recover ? (
+                            <form
+                                className="mt-4 space-y-3"
+                                onSubmit={(event) => {
+                                    event.preventDefault();
+                                    recovery.post('/admin/orders/' + order.id + '/recover-payment', {
+                                        preserveScroll: true,
+                                    });
+                                }}
+                            >
+                                <label htmlFor="recovery-reason" className="block text-sm text-gray-300">
+                                    Reason for recovery (saved in order notes)
+                                </label>
+                                <textarea
+                                    id="recovery-reason"
+                                    required
+                                    minLength={3}
+                                    maxLength={1000}
+                                    value={recovery.data.reason}
+                                    onChange={(event) => recovery.setData('reason', event.target.value)}
+                                    className="w-full rounded-lg border border-gray-700 bg-gray-950 p-3 text-white"
+                                />
+                                {recovery.errors.reason && (
+                                    <p className="text-sm text-red-400">{recovery.errors.reason}</p>
+                                )}
+                                <button
+                                    type="submit"
+                                    disabled={recovery.processing}
+                                    className="rounded-lg bg-amber-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
+                                >
+                                    Recover to Processing
+                                </button>
+                            </form>
+                        ) : (
+                            <p className="mt-3 text-sm text-amber-300">
+                                Payment is not fully verified. Review the payment before recovery.
+                            </p>
+                        )}
+                    </section>
+                )}
 
                 <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
                     <div className="space-y-6">
@@ -264,7 +323,7 @@ export default function Show({ order, statuses }) {
                                         {order.status_label}
                                     </p>
                                     <p className="mt-1 text-sm leading-6 text-gray-500">
-                                        No further status changes are available
+                                        No standard status changes are available
                                         for this order.
                                     </p>
                                 </div>
@@ -273,15 +332,17 @@ export default function Show({ order, statuses }) {
 
                         <section className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
                             <p className="text-sm font-semibold text-amber-300">
-                                Order Status Only
-                            </p>
+                                  Order Status &amp; Fulfillment
+                              </p>
 
-                            <p className="mt-2 text-sm leading-6 text-gray-400">
-                                Changing this status does not verify payment,
-                                grant product ownership, provide download
-                                access, or change the customer&apos;s account
-                                balance.
-                            </p>
+                              <p className="mt-2 text-sm leading-6 text-gray-400">
+                                  Standard status changes only update the
+                                  operational status. Selecting Completed
+                                  requires fully verified payment and, when
+                                  successful, grants product ownership and
+                                  issues the customer license. It does not
+                                  change the customer&apos;s account balance.
+                              </p>
                         </section>
                     </aside>
                 </div>

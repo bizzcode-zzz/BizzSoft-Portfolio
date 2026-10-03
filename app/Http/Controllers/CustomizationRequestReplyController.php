@@ -31,12 +31,25 @@ class CustomizationRequestReplyController extends Controller
             $customizationRequest,
             $validated
         ): void {
-            $customizationRequest->messages()->create([
+            $lockedRequest = CustomizationRequest::query()
+                ->whereKey($customizationRequest->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->authorize('update', $lockedRequest);
+
+            abort_unless(
+                $lockedRequest->status === CustomizationRequestStatus::NeedsInformation,
+                422,
+                'You can only send information when this customization request needs information.'
+            );
+
+            $lockedRequest->messages()->create([
                 'user_id' => $request->user()->id,
                 'message' => $validated['message'],
             ]);
 
-            $customizationRequest->update([
+            $lockedRequest->update([
                 'status' => CustomizationRequestStatus::UnderReview,
             ]);
         });

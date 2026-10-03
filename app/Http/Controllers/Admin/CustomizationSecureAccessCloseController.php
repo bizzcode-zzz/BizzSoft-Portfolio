@@ -26,8 +26,27 @@ class CustomizationSecureAccessCloseController extends Controller
             );
         }
 
-        DB::transaction(function () use ($secureAccess) {
-            $secureAccess->update([
+        DB::transaction(function () use ($customizationRequest, $secureAccess): void {
+            $lockedSecureAccess = CustomizationSecureAccess::query()
+                ->whereKey($secureAccess->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            abort_unless(
+                $lockedSecureAccess->customization_request_id === $customizationRequest->id,
+                404
+            );
+
+            $this->authorize('close', $lockedSecureAccess);
+
+            if ($lockedSecureAccess->status === CustomizationSecureAccessStatus::Closed) {
+                abort(
+                    422,
+                    'This secure access record is already closed.'
+                );
+            }
+
+            $lockedSecureAccess->update([
                 // Permanently purge sensitive values.
                 'login_url' => null,
                 'username' => null,

@@ -1,5 +1,6 @@
 import { Fragment, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
+import Pagination from '../../../Components/Pagination';
 import AdminLayout from '../../../Layouts/AdminLayout';
 
 const statusClasses = {
@@ -71,7 +72,8 @@ function statusLabel(status) {
     return 'Not Activated';
 }
 
-export default function Index({ licenses = [] }) {
+export default function Index({ licenses }) {
+    const licenseRows = licenses?.data ?? [];
     const [expandedActivityId, setExpandedActivityId] = useState(null);
 
     const toggleActivities = (licenseId) => {
@@ -124,7 +126,7 @@ export default function Index({ licenses = [] }) {
                     </p>
                 </div>
 
-                {licenses.length === 0 ? (
+                {licenseRows.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-gray-800 bg-gray-900 p-10 text-center">
                         <h2 className="text-lg font-semibold text-white">
                             No licenses issued yet
@@ -186,7 +188,7 @@ export default function Index({ licenses = [] }) {
                             </thead>
 
                             <tbody className="divide-y divide-gray-800">
-                                {licenses.map((license) => (
+                                {licenseRows.map((license) => (
                                     <Fragment key={license.id}>
                                         <tr
                                             key={`license-${license.id}`}
@@ -449,6 +451,8 @@ export default function Index({ licenses = [] }) {
                         </table>
                     </div>
                 )}
+
+                <Pagination paginator={licenses} label="licenses" />
             </div>
         </AdminLayout>
     );

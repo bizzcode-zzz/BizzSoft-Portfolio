@@ -91,10 +91,10 @@ export default function ContactCTA() {
                     </p>
 
                     <a
-                        href="/contact"
+                        href="/customizations/create"
                         className="contact-cta-button"
                     >
-                        <span>Contact Us</span>
+                        <span>Start a Project</span>
 
                         <span className="contact-cta-button-arrow">
                             <span className="contact-cta-button-arrow-icon">

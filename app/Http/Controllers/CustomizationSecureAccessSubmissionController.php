@@ -8,6 +8,7 @@ use App\Models\CustomizationRequest;
 use App\Models\CustomizationSecureAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CustomizationSecureAccessSubmissionController extends Controller
 {
@@ -61,18 +62,52 @@ class CustomizationSecureAccessSubmissionController extends Controller
             ],
         ]);
 
-        $secureAccess->update([
-            'login_url' => $validated['login_url'] ?? null,
-            'username' => $validated['username'] ?? null,
-            'secret' => $validated['secret'],
-            'notes' => $validated['notes'] ?? null,
+        DB::transaction(function () use ($customizationRequest, $secureAccess, $validated): void {
+            $lockedSecureAccess = CustomizationSecureAccess::query()
+                ->whereKey($secureAccess->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-            'status' => CustomizationSecureAccessStatus::Submitted,
-            'submitted_at' => now(),
+            abort_unless(
+                $lockedSecureAccess->customization_request_id === $customizationRequest->id,
+                404
+            );
 
-            'viewed_at' => null,
-            'closed_at' => null,
-        ]);
+            $this->authorize('submit', $lockedSecureAccess);
+
+            if (
+                $lockedSecureAccess->direction !==
+                CustomizationSecureAccessDirection::CustomerToAdmin
+            ) {
+                abort(
+                    422,
+                    'This secure access request cannot be submitted by the customer.'
+                );
+            }
+
+            if (
+                $lockedSecureAccess->status !==
+                CustomizationSecureAccessStatus::Requested
+            ) {
+                abort(
+                    422,
+                    'This secure access request is no longer accepting credentials.'
+                );
+            }
+
+            $lockedSecureAccess->update([
+                'login_url' => $validated['login_url'] ?? null,
+                'username' => $validated['username'] ?? null,
+                'secret' => $validated['secret'],
+                'notes' => $validated['notes'] ?? null,
+
+                'status' => CustomizationSecureAccessStatus::Submitted,
+                'submitted_at' => now(),
+
+                'viewed_at' => null,
+                'closed_at' => null,
+            ]);
+        });
 
         return back();
     }

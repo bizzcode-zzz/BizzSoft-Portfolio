@@ -7,6 +7,7 @@ use App\Models\Ticket;
 use App\Models\TicketSecureAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TicketSecureAccessSubmissionController extends Controller
 {
@@ -51,16 +52,35 @@ class TicketSecureAccessSubmissionController extends Controller
             ],
         ]);
 
-        $secureAccess->update([
-            'login_url' => $validated['login_url'] ?? null,
-            'username' => $validated['username'] ?? null,
-            'secret' => $validated['secret'],
-            'notes' => $validated['notes'] ?? null,
-            'status' => TicketSecureAccessStatus::Submitted,
-            'submitted_at' => now(),
-            'viewed_at' => null,
-            'closed_at' => null,
-        ]);
+        DB::transaction(function () use ($ticket, $secureAccess, $validated): void {
+            $lockedSecureAccess = TicketSecureAccess::query()
+                ->whereKey($secureAccess->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            abort_unless(
+                $lockedSecureAccess->ticket_id === $ticket->id,
+                404
+            );
+
+            $this->authorize('submit', $lockedSecureAccess);
+
+            abort_unless(
+                $lockedSecureAccess->status === TicketSecureAccessStatus::Requested,
+                422
+            );
+
+            $lockedSecureAccess->update([
+                'login_url' => $validated['login_url'] ?? null,
+                'username' => $validated['username'] ?? null,
+                'secret' => $validated['secret'],
+                'notes' => $validated['notes'] ?? null,
+                'status' => TicketSecureAccessStatus::Submitted,
+                'submitted_at' => now(),
+                'viewed_at' => null,
+                'closed_at' => null,
+            ]);
+        });
 
         return back();
     }

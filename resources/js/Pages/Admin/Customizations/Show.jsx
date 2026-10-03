@@ -60,7 +60,10 @@ function formatDate(date) {
 
 export default function Show({
     customizationRequest,
+    messageHistory = null,
     secureAccesses = [],
+    quotePayment = null,
+    paymentRecovery = null,
 }) {
     const [processingReview, setProcessingReview] = useState(false);
     const [processingDevelopment, setProcessingDevelopment] = useState(false);
@@ -113,6 +116,15 @@ export default function Show({
         reset: resetDecline,
     } = useForm({
         message: '',
+    });
+    const {
+        data: recoveryData,
+        setData: setRecoveryData,
+        post: postRecovery,
+        processing: processingRecovery,
+        errors: recoveryErrors,
+    } = useForm({
+        reason: '',
     });
 
     const startReview = () => {
@@ -263,7 +275,7 @@ export default function Show({
         );
     };
 
-    const messages = customizationRequest.messages ?? [];
+    const messages = messageHistory?.data ?? [];
 
     const terminalStatuses = [
         'completed',
@@ -401,6 +413,34 @@ export default function Show({
                         </div>
                     )}
 
+                    {(messageHistory?.prev_page_url ||
+                        messageHistory?.next_page_url) && (
+                        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-gray-800 pt-5">
+                            <div>
+                                {messageHistory?.prev_page_url && (
+                                    <Link
+                                        href={messageHistory.prev_page_url}
+                                        preserveScroll
+                                        className="inline-flex rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-sm font-medium text-gray-300 transition hover:border-gray-600 hover:text-white"
+                                    >
+                                        Newer messages
+                                    </Link>
+                                )}
+                            </div>
+
+                            <div>
+                                {messageHistory?.next_page_url && (
+                                    <Link
+                                        href={messageHistory.next_page_url}
+                                        preserveScroll
+                                        className="inline-flex rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-sm font-medium text-gray-300 transition hover:border-gray-600 hover:text-white"
+                                    >
+                                        Older messages
+                                    </Link>
+                                )}
+                            </div>
+                        </div>
+                    )}
                     {!conversationIsReadOnly ? (
                         <form
                             onSubmit={sendConversationMessage}
@@ -478,6 +518,83 @@ export default function Show({
                         </div>
                     )}
                 </div>
+                {paymentRecovery?.needs_review && (
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-6">
+                        <h2 className="text-lg font-semibold text-amber-300">
+                            Cancelled customization has verified payment
+                        </h2>
+
+                        <p className="mt-2 text-sm leading-6 text-gray-300">
+                            Verified payment: USD{' '}
+                            {paymentRecovery.verified_amount}. The request
+                            remains cancelled until an administrator explicitly
+                            recovers it. Recovery moves it only to Accepted;
+                            development must still be started separately.
+                        </p>
+
+                        {paymentRecovery.can_recover ? (
+                            <form
+                                className="mt-5 space-y-3"
+                                onSubmit={(event) => {
+                                    event.preventDefault();
+
+                                    postRecovery(
+                                        `/admin/customizations/${customizationRequest.id}/recover-payment`,
+                                        {
+                                            preserveScroll: true,
+                                        },
+                                    );
+                                }}
+                            >
+                                <label
+                                    htmlFor="payment-recovery-reason"
+                                    className="block text-sm font-medium text-gray-300"
+                                >
+                                    Reason for recovery
+                                </label>
+
+                                <textarea
+                                    id="payment-recovery-reason"
+                                    required
+                                    minLength={3}
+                                    maxLength={1000}
+                                    rows={4}
+                                    value={recoveryData.reason}
+                                    onChange={(event) =>
+                                        setRecoveryData(
+                                            'reason',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Confirm why this cancelled paid customization should continue."
+                                    className="w-full rounded-lg border border-gray-700 bg-gray-950 p-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-amber-500"
+                                />
+
+                                {recoveryErrors.reason && (
+                                    <p className="text-sm text-red-400">
+                                        {recoveryErrors.reason}
+                                    </p>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    disabled={processingRecovery}
+                                    className="rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    {processingRecovery
+                                        ? 'Recovering...'
+                                        : 'Recover to Accepted'}
+                                </button>
+                            </form>
+                        ) : (
+                            <p className="mt-4 text-sm font-medium text-amber-300">
+                                Recovery is blocked because the verified payment
+                                is incomplete or currently held for payment review.
+                            </p>
+                        )}
+                    </div>
+                )}
+
 
                 <div className="rounded-xl border border-gray-800 bg-gray-900 p-6">
                     <h2 className="font-semibold text-white">
@@ -870,20 +987,97 @@ export default function Show({
 
                             <p className="mt-2 text-sm leading-6 text-gray-400">
                                 The customer accepted the quotation. Development
-                                can now be started when BizzSoft is ready to
-                                begin the work.
+                                can start only after the quotation is fully paid
+                                and there is no active payment hold.
                             </p>
 
-                            <button
-                                type="button"
-                                onClick={startDevelopment}
-                                disabled={processingDevelopment}
-                                className="mt-5 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                {processingDevelopment
-                                    ? 'Starting Development...'
-                                    : 'Start Development'}
-                            </button>
+                            {quotePayment ? (
+                                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                                    <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-4">
+                                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                            Quote
+                                        </p>
+
+                                        <p className="mt-2 font-semibold text-white">
+                                            USD {quotePayment.price}
+                                        </p>
+                                    </div>
+
+                                    <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-4">
+                                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                            Verified
+                                        </p>
+
+                                        <p className="mt-2 font-semibold text-white">
+                                            USD {quotePayment.verified_amount}
+                                        </p>
+                                    </div>
+
+                                    <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-4">
+                                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                            Remaining usable
+                                        </p>
+
+                                        <p className="mt-2 font-semibold text-white">
+                                            USD {quotePayment.remaining_amount}
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="mt-5 rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
+                                    <p className="text-sm font-medium text-amber-300">
+                                        Payment state unavailable
+                                    </p>
+
+                                    <p className="mt-1 text-sm leading-6 text-gray-400">
+                                        A valid quotation and payment state are
+                                        required before development can start.
+                                    </p>
+                                </div>
+                            )}
+
+                            {quotePayment?.fully_paid_and_unheld ? (
+                                <div className="mt-5">
+                                    <p className="text-sm leading-6 text-emerald-300">
+                                        Payment is fully verified and has no active
+                                        hold. Development can now be started.
+                                    </p>
+
+                                    <button
+                                        type="button"
+                                        onClick={startDevelopment}
+                                        disabled={processingDevelopment}
+                                        className="mt-4 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {processingDevelopment
+                                            ? 'Starting Development...'
+                                            : 'Start Development'}
+                                    </button>
+                                </div>
+                            ) : quotePayment?.has_active_hold ? (
+                                <div className="mt-5 rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
+                                    <p className="text-sm font-semibold text-amber-300">
+                                        Development blocked
+                                    </p>
+
+                                    <p className="mt-1 text-sm leading-6 text-gray-400">
+                                        One or more verified payments are currently
+                                        held for payment review. Resolve the hold
+                                        before starting development.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="mt-5 rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
+                                    <p className="text-sm font-semibold text-amber-300">
+                                        Payment required
+                                    </p>
+
+                                    <p className="mt-1 text-sm leading-6 text-gray-400">
+                                        Development remains blocked until the full
+                                        quotation amount is verified.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     ) : customizationRequest.status === 'in_progress' ? (
                         <div className="mt-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-5">

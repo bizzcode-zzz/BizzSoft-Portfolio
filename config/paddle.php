@@ -26,4 +26,20 @@ return [
     'client_token' => env('PADDLE_CLIENT_TOKEN'),
 
     'webhook_secret' => env('PADDLE_WEBHOOK_SECRET'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Paddle Tax Categories
+    |--------------------------------------------------------------------------
+    |
+    | These categories must also be enabled for the Paddle account.
+    |
+    */
+    'tax_categories' => [
+        'product' => env('PADDLE_PRODUCT_TAX_CATEGORY', 'standard'),
+        'customization' => env(
+            'PADDLE_CUSTOMIZATION_TAX_CATEGORY',
+            'software-programming-services'
+        ),
+    ],
 ];

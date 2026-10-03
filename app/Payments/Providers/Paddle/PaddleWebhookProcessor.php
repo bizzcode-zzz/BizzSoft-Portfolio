@@ -7,12 +7,13 @@ use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentWebhookEvent;
-use Illuminate\Support\Facades\DB;
+use App\Payments\AdjustmentPurchaseLocks;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use JsonSerializable;
 use Paddle\SDK\Entities\Event as PaddleEvent;
 use Paddle\SDK\Notifications\Entities\Transaction as PaddleTransaction;
+use Paddle\SDK\Notifications\Events\AdjustmentCreated;
+use Paddle\SDK\Notifications\Events\AdjustmentUpdated;
 use Paddle\SDK\Notifications\Events\TransactionCanceled;
 use Paddle\SDK\Notifications\Events\TransactionCompleted;
 use Paddle\SDK\Notifications\Events\TransactionPaid;
@@ -24,6 +25,10 @@ final class PaddleWebhookProcessor
 {
     public function process(PaddleEvent $event): bool
     {
+        if ($event instanceof AdjustmentCreated || $event instanceof AdjustmentUpdated) {
+            return app(PaddleAdjustmentProcessor::class)->process($event);
+        }
+
         $eventType = (string) $event->eventType->getValue();
 
         $transaction = $this->transactionFromEvent(
@@ -43,7 +48,7 @@ final class PaddleWebhookProcessor
         ]);
 
         try {
-            return DB::transaction(
+            return app(AdjustmentPurchaseLocks::class)->transaction(
                 function () use (
                     $event,
                     $eventType,
@@ -67,22 +72,16 @@ final class PaddleWebhookProcessor
                             'failure_message' => null,
                             'metadata' => [
                                 'ignored' => true,
-                                'reason' =>
-                                    'Unsupported Paddle event type.',
+                                'reason' => 'Unsupported Paddle event type.',
                             ],
                         ]);
 
                         return true;
                     }
 
-                    $payments = Payment::query()
-                        ->where('provider', 'paddle')
-                        ->where(
-                            'provider_payment_id',
-                            $transaction->id
-                        )
-                        ->lockForUpdate()
-                        ->get();
+                    $payments = app(AdjustmentPurchaseLocks::class)->payments([$transaction->id])
+                        ->filter(fn (Payment $payment) => $payment->provider === 'paddle'
+                            && $payment->provider_payment_id === $transaction->id);
 
                     if ($payments->count() !== 1) {
                         throw new RuntimeException(
@@ -102,54 +101,47 @@ final class PaddleWebhookProcessor
                     );
 
                     match (true) {
-                        $event instanceof TransactionCompleted =>
-                            $this->handleCompleted(
-                                $payment,
-                                $transaction,
-                                $event
-                            ),
+                        $event instanceof TransactionCompleted => $this->handleCompleted(
+                            $payment,
+                            $transaction,
+                            $event
+                        ),
 
-                        $event instanceof TransactionPaid =>
-                            $this->handlePaid(
-                                $payment,
-                                $transaction,
-                                $event
-                            ),
+                        $event instanceof TransactionPaid => $this->handlePaid(
+                            $payment,
+                            $transaction,
+                            $event
+                        ),
 
-                        $event instanceof TransactionPaymentFailed =>
-                            $this->handleFailed(
-                                $payment,
-                                $transaction,
-                                $event
-                            ),
+                        $event instanceof TransactionPaymentFailed => $this->handleFailed(
+                            $payment,
+                            $transaction,
+                            $event
+                        ),
 
-                        $event instanceof TransactionCanceled =>
-                            $this->handleCancelled(
-                                $payment,
-                                $transaction,
-                                $event
-                            ),
+                        $event instanceof TransactionCanceled => $this->handleCancelled(
+                            $payment,
+                            $transaction,
+                            $event
+                        ),
 
                         default => null,
                     };
 
                     $webhookEvent->update([
                         'event_type' => $eventType,
-                        'provider_payment_id' =>
-                            $providerPaymentId,
+                        'provider_payment_id' => $providerPaymentId,
                         'processed_at' => now(),
                         'failed_at' => null,
                         'failure_message' => null,
                         'metadata' => [
                             'payment_id' => $payment->id,
-                            'payment_number' =>
-                                $payment->payment_number,
+                            'payment_number' => $payment->payment_number,
                         ],
                     ]);
 
                     return true;
-                },
-                3
+                }
             );
         } catch (Throwable $exception) {
             PaymentWebhookEvent::query()
@@ -176,91 +168,15 @@ final class PaddleWebhookProcessor
             $event instanceof TransactionCompleted,
             $event instanceof TransactionPaid,
             $event instanceof TransactionPaymentFailed,
-            $event instanceof TransactionCanceled =>
-                $event->transaction,
+            $event instanceof TransactionCanceled => $event->transaction,
 
             default => null,
         };
     }
 
-    private function validateTransaction(
-        Payment $payment,
-        PaddleTransaction $transaction
-    ): void {
-        $currency = strtoupper(
-            (string) $transaction
-                ->currencyCode
-                ->getValue()
-        );
-
-        if ($currency !== 'USD') {
-            throw new InvalidArgumentException(
-                "Unexpected Paddle currency [{$currency}]."
-            );
-        }
-
-        if (
-            strtoupper((string) $payment->currency) !==
-            $currency
-        ) {
-            throw new InvalidArgumentException(
-                'Paddle transaction currency does not match the local payment.'
-            );
-        }
-
-        $expectedMinorUnits = $this->toMinorUnits(
-            (string) $payment->amount
-        );
-
-        $providerTotal = ltrim(
-            (string) $transaction
-                ->details
-                ->totals
-                ->total,
-            '0'
-        );
-
-        if ($providerTotal === '') {
-            $providerTotal = '0';
-        }
-
-        if ($providerTotal !== $expectedMinorUnits) {
-            throw new InvalidArgumentException(
-                'Paddle transaction total does not match the local payment amount.'
-            );
-        }
-
-        $customData = $this->customData(
-            $transaction
-        );
-
-        $expected = [
-            'bizzsoft_payment_id' =>
-                (string) $payment->id,
-
-            'payment_number' =>
-                (string) $payment->payment_number,
-
-            'payable_type' =>
-                (string) $payment->payable_type,
-
-            'payable_id' =>
-                (string) $payment->payable_id,
-
-            'user_id' =>
-                (string) $payment->user_id,
-        ];
-
-        foreach ($expected as $key => $value) {
-            if (
-                ! array_key_exists($key, $customData) ||
-                (string) $customData[$key] !== $value
-            ) {
-                throw new InvalidArgumentException(
-                    "Paddle custom data mismatch for [{$key}]."
-                );
-            }
-        }
+    private function validateTransaction(Payment $payment, PaddleTransaction $transaction): void
+    {
+        (new PaddleTransactionValidator)->validate($payment, $transaction);
     }
 
     private function handlePaid(
@@ -295,11 +211,40 @@ final class PaddleWebhookProcessor
 
         $payment->verified_by = null;
 
-        $payment->metadata = $this->paymentMetadata(
+        $metadata = $this->paymentMetadata(
             $payment,
             $transaction,
             $event
         );
+
+        $customerId = $transaction->customerId;
+
+        if (is_string($customerId) && trim($customerId) !== '') {
+            $existingCustomerId = $metadata['paddle_customer_id'] ?? null;
+
+            $provenance = [
+                'transaction_id' => $transaction->id,
+                'event_id' => $event->eventId,
+                'event_type' => 'transaction.completed',
+                'occurred_at' => $event->occurredAt->format(DATE_ATOM),
+            ];
+
+            if (
+                $existingCustomerId !== null
+                && $existingCustomerId !== $customerId
+            ) {
+                $metadata['paddle_customer_identity_review_required'] = true;
+                $metadata['paddle_customer_identity_conflicts'][$event->eventId] = [
+                    'customer_id' => $customerId,
+                    ...$provenance,
+                ];
+            } else {
+                $metadata['paddle_customer_id'] = $customerId;
+                $metadata['paddle_customer_identity_provenance'] = $provenance;
+            }
+        }
+
+        $payment->metadata = $metadata;
 
         $payment->save();
 
@@ -408,48 +353,28 @@ final class PaddleWebhookProcessor
 
         $metadata['paddle_webhook'] = [
             'event_id' => $event->eventId,
-            'event_type' =>
-                (string) $event->eventType->getValue(),
+            'event_type' => (string) $event->eventType->getValue(),
 
-            'occurred_at' =>
-                $event->occurredAt->format(DATE_ATOM),
+            'occurred_at' => $event->occurredAt->format(DATE_ATOM),
 
-            'transaction_id' =>
-                $transaction->id,
+            'transaction_id' => $transaction->id,
 
-            'currency' =>
-                (string) $transaction
-                    ->currencyCode
-                    ->getValue(),
+            'currency' => (string) $transaction
+                ->currencyCode
+                ->getValue(),
 
-            'subtotal_minor' =>
-                $transaction
-                    ->details
-                    ->totals
-                    ->subtotal,
+            'subtotal_minor' => $transaction
+                ->details
+                ->totals
+                ->subtotal,
 
-            'total_minor' =>
-                $transaction
-                    ->details
-                    ->totals
-                    ->total,
+            'total_minor' => $transaction
+                ->details
+                ->totals
+                ->total,
         ];
 
         return $metadata;
-    }
-
-    private function customData(
-        PaddleTransaction $transaction
-    ): array {
-        $data = $transaction->customData?->data ?? [];
-
-        if ($data instanceof JsonSerializable) {
-            $data = $data->jsonSerialize();
-        }
-
-        return is_array($data)
-            ? $data
-            : [];
     }
 
     private function toMinorUnits(

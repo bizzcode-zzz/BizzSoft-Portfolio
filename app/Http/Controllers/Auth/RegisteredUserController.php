@@ -8,6 +8,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,9 +28,13 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        $user = User::create($validated);
+        $user = DB::transaction(function () use ($validated): User {
+            $user = User::create($validated);
 
-        $user->assignRole('customer');
+            $user->assignRole('customer');
+
+            return $user;
+        });
 
         event(new Registered($user));
 
@@ -37,6 +42,8 @@ class RegisteredUserController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->route('dashboard');
+        return redirect()->intended(
+            route('dashboard')
+        );
     }
 }

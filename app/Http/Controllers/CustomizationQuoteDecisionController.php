@@ -17,7 +17,15 @@ class CustomizationQuoteDecisionController extends Controller
         $this->ensureQuoteCanBeDecided($customizationRequest);
 
         DB::transaction(function () use ($customizationRequest): void {
-            $customizationRequest->update([
+            $lockedRequest = CustomizationRequest::query()
+                ->whereKey($customizationRequest->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->authorize('update', $lockedRequest);
+            $this->ensureQuoteCanBeDecided($lockedRequest);
+
+            $lockedRequest->update([
                 'status' => CustomizationRequestStatus::Accepted,
             ]);
         });
@@ -34,7 +42,15 @@ class CustomizationQuoteDecisionController extends Controller
         $this->ensureQuoteCanBeDecided($customizationRequest);
 
         DB::transaction(function () use ($customizationRequest): void {
-            $customizationRequest->update([
+            $lockedRequest = CustomizationRequest::query()
+                ->whereKey($customizationRequest->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->authorize('update', $lockedRequest);
+            $this->ensureQuoteCanBeDecided($lockedRequest);
+
+            $lockedRequest->update([
                 'status' => CustomizationRequestStatus::QuoteDeclined,
             ]);
         });

@@ -22,9 +22,24 @@ class CustomizationRequestStatusController extends Controller
             'Only submitted customization requests can be moved under review.'
         );
 
-        $customizationRequest->update([
-            'status' => CustomizationRequestStatus::UnderReview,
-        ]);
+        DB::transaction(function () use ($customizationRequest): void {
+            $lockedRequest = CustomizationRequest::query()
+                ->whereKey($customizationRequest->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->authorize('update', $lockedRequest);
+
+            abort_unless(
+                $lockedRequest->status === CustomizationRequestStatus::Submitted,
+                422,
+                'Only submitted customization requests can be moved under review.'
+            );
+
+            $lockedRequest->update([
+                'status' => CustomizationRequestStatus::UnderReview,
+            ]);
+        });
 
         return redirect()
             ->route('admin.customizations.show', $customizationRequest);
@@ -59,13 +74,31 @@ class CustomizationRequestStatusController extends Controller
             $request,
             $customizationRequest,
             $validated
-        ) {
-            $customizationRequest->messages()->create([
+        ): void {
+            $lockedRequest = CustomizationRequest::query()
+                ->whereKey($customizationRequest->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->authorize('update', $lockedRequest);
+
+            $allowedStatuses = [
+                CustomizationRequestStatus::UnderReview,
+                CustomizationRequestStatus::NeedsInformation,
+            ];
+
+            abort_unless(
+                in_array($lockedRequest->status, $allowedStatuses, true),
+                422,
+                'Only customization requests under review or waiting for customer information can be declined.'
+            );
+
+            $lockedRequest->messages()->create([
                 'user_id' => $request->user()->id,
                 'message' => $validated['message'],
             ]);
 
-            $customizationRequest->update([
+            $lockedRequest->update([
                 'status' => CustomizationRequestStatus::RequestDeclined,
             ]);
         });

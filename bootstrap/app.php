@@ -31,5 +31,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Secure-access submissions and handoffs must never copy credentials into session input.
+        $exceptions->dontFlash([
+            'secret',
+            'username',
+            'login_url',
+            'notes',
+        ]);
     })->create();

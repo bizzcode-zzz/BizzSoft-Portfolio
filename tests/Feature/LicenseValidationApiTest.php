@@ -26,7 +26,8 @@ class LicenseValidationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/validate', [
                 'license_key' => $license->license_key,
-                'domain' => 'company-a.test',
+                'product_key' => $this->productKey($license),
+                'domain' => ' COMPANY-A.TEST ',
             ])
             ->assertOk()
             ->assertJson([
@@ -55,6 +56,7 @@ class LicenseValidationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/validate', [
                 'license_key' => $license->license_key,
+                'product_key' => $this->productKey($license),
                 'domain' => 'company-b.test',
             ])
             ->assertStatus(409)
@@ -83,6 +85,7 @@ class LicenseValidationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/validate', [
                 'license_key' => $license->license_key,
+                'product_key' => $this->productKey($license),
                 'domain' => 'company-a.test',
             ])
             ->assertStatus(403)
@@ -103,6 +106,7 @@ class LicenseValidationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/validate', [
                 'license_key' => $license->license_key,
+                'product_key' => $this->productKey($license),
                 'domain' => 'company-a.test',
             ])
             ->assertStatus(409)
@@ -123,6 +127,7 @@ class LicenseValidationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/validate', [
                 'license_key' => 'BIZZ-DOES-NOT-EXIST-0001',
+                'product_key' => '11111111-1111-4111-8111-111111111111',
                 'domain' => 'company-a.test',
             ])
             ->assertStatus(404)
@@ -147,6 +152,7 @@ class LicenseValidationApiTest extends TestCase
             $this
                 ->postJson('/api/licenses/validate', [
                     'license_key' => $license->license_key,
+                    'product_key' => $this->productKey($license),
                     'domain' => 'company-a.test',
                 ])
                 ->assertOk();
@@ -155,6 +161,7 @@ class LicenseValidationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/validate', [
                 'license_key' => $license->license_key,
+                'product_key' => $this->productKey($license),
                 'domain' => 'company-a.test',
             ])
             ->assertStatus(429)
@@ -174,6 +181,7 @@ class LicenseValidationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/validate', [
                 'license_key' => $license->license_key,
+                'product_key' => $this->productKey($license),
                 'domain' => 'company-a.test',
             ])
             ->assertOk();
@@ -200,6 +208,7 @@ class LicenseValidationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/validate', [
                 'license_key' => $license->license_key,
+                'product_key' => $this->productKey($license),
                 'domain' => 'company-b.test',
             ])
             ->assertStatus(409);
@@ -227,6 +236,7 @@ class LicenseValidationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/validate', [
                 'license_key' => $license->license_key,
+                'product_key' => $this->productKey($license),
                 'domain' => 'company-a.test',
             ])
             ->assertStatus(403);
@@ -250,6 +260,7 @@ class LicenseValidationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/validate', [
                 'license_key' => $licenseKey,
+                'product_key' => '11111111-1111-4111-8111-111111111111',
                 'domain' => 'unknown-company.test',
             ])
             ->assertStatus(404);
@@ -264,6 +275,16 @@ class LicenseValidationApiTest extends TestCase
             ),
             'http_status' => 404,
         ]);
+    }
+
+    private function productKey(ProductLicense $license): string
+    {
+        return (string) $license
+            ->order()
+            ->firstOrFail()
+            ->product()
+            ->firstOrFail()
+            ->license_product_key;
     }
 
     private function createLicense(

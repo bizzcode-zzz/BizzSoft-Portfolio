@@ -69,7 +69,8 @@
                     settings: {
                         displayMode: 'overlay',
                         theme: 'light',
-                        locale: 'en'
+                        locale: 'en',
+                        showAddDiscounts: false
                     }
                 }
             });

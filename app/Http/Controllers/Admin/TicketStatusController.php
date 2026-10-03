@@ -6,6 +6,7 @@ use App\Enums\TicketStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 
 class TicketStatusController extends Controller
 {
@@ -17,9 +18,22 @@ class TicketStatusController extends Controller
             abort(422, 'Closed tickets cannot be resolved.');
         }
 
-        $ticket->update([
-            'status' => TicketStatus::Resolved,
-        ]);
+        DB::transaction(function () use ($ticket): void {
+            $lockedTicket = Ticket::query()
+                ->whereKey($ticket->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->authorize('update', $lockedTicket);
+
+            if ($lockedTicket->status === TicketStatus::Closed) {
+                abort(422, 'Closed tickets cannot be resolved.');
+            }
+
+            $lockedTicket->update([
+                'status' => TicketStatus::Resolved,
+            ]);
+        });
 
         return redirect()->route('admin.tickets.show', $ticket);
     }
@@ -32,9 +46,22 @@ class TicketStatusController extends Controller
             abort(422, 'Only resolved tickets can be closed.');
         }
 
-        $ticket->update([
-            'status' => TicketStatus::Closed,
-        ]);
+        DB::transaction(function () use ($ticket): void {
+            $lockedTicket = Ticket::query()
+                ->whereKey($ticket->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->authorize('update', $lockedTicket);
+
+            if ($lockedTicket->status !== TicketStatus::Resolved) {
+                abort(422, 'Only resolved tickets can be closed.');
+            }
+
+            $lockedTicket->update([
+                'status' => TicketStatus::Closed,
+            ]);
+        });
 
         return redirect()->route('admin.tickets.show', $ticket);
     }

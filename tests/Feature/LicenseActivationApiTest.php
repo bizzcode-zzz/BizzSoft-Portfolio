@@ -60,7 +60,8 @@ class LicenseActivationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/activate', [
                 'license_key' => $license->license_key,
-                'domain' => 'company-a.test',
+                'product_key' => $product->license_product_key,
+                'domain' => ' Company-A.Test ',
             ])
             ->assertOk()
             ->assertJson([
@@ -82,6 +83,7 @@ class LicenseActivationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/activate', [
                 'license_key' => $license->license_key,
+                'product_key' => $product->license_product_key,
                 'domain' => 'company-a.test',
             ])
             ->assertOk()
@@ -94,6 +96,7 @@ class LicenseActivationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/activate', [
                 'license_key' => $license->license_key,
+                'product_key' => $product->license_product_key,
                 'domain' => 'company-b.test',
             ])
             ->assertStatus(409)
@@ -159,6 +162,7 @@ class LicenseActivationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/activate', [
                 'license_key' => $license->license_key,
+                'product_key' => $product->license_product_key,
                 'domain' => 'company-a.test',
             ])
             ->assertStatus(403)
@@ -171,6 +175,7 @@ class LicenseActivationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/activate', [
                 'license_key' => $license->license_key,
+                'product_key' => $product->license_product_key,
                 'domain' => 'company-b.test',
             ])
             ->assertStatus(403)
@@ -225,6 +230,7 @@ class LicenseActivationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/activate', [
                 'license_key' => $license->license_key,
+                'product_key' => $product->license_product_key,
                 'domain' => 'company-a.test',
             ])
             ->assertOk();
@@ -288,6 +294,7 @@ class LicenseActivationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/activate', [
                 'license_key' => $license->license_key,
+                'product_key' => $product->license_product_key,
                 'domain' => 'company-b.test',
             ])
             ->assertStatus(409);
@@ -352,6 +359,7 @@ class LicenseActivationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/activate', [
                 'license_key' => $license->license_key,
+                'product_key' => $product->license_product_key,
                 'domain' => 'company-a.test',
             ])
             ->assertStatus(403);
@@ -375,6 +383,7 @@ class LicenseActivationApiTest extends TestCase
         $this
             ->postJson('/api/licenses/activate', [
                 'license_key' => $licenseKey,
+                'product_key' => '11111111-1111-4111-8111-111111111111',
                 'domain' => 'unknown-company.test',
             ])
             ->assertStatus(404);

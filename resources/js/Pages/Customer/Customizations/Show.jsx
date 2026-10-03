@@ -59,7 +59,7 @@ function statusDescription(status) {
         quote_declined:
             'The quotation for this request was declined.',
         accepted:
-            'The quotation was accepted and the request is ready for development.',
+            'The quotation was accepted. Payment must be verified before development can begin.',
         in_progress:
             'Development work on this customization is currently in progress.',
         ready_for_review:
@@ -124,7 +124,9 @@ function formatPrice(price) {
 
 export default function Show({
     customizationRequest,
+    messageHistory = null,
     secureAccesses = [],
+    paymentSummary = null,
 }) {
     const {
         data,
@@ -165,16 +167,26 @@ export default function Show({
     });
 
     const {
+        data: approvalData,
+        setData: setApprovalData,
         patch: patchApproval,
         processing: processingApproval,
-    } = useForm({});
+        errors: approvalErrors,
+    } = useForm({
+        message: '',
+    });
 
     const {
         patch: patchCancellation,
         processing: processingCancellation,
     } = useForm({});
 
-    const messages = customizationRequest.messages ?? [];
+    const {
+        post: postPayment,
+        processing: processingPayment,
+    } = useForm({});
+
+    const messages = messageHistory?.data ?? [];
     const quote = customizationRequest.quote ?? null;
 
     const terminalStatuses = [
@@ -203,6 +215,12 @@ export default function Show({
     const canCancel = cancellableStatuses.includes(
         customizationRequest.status,
     );
+
+    const startPayment = () => {
+        postPayment(
+            `/customizations/${customizationRequest.id}/payment/checkout`,
+        );
+    };
 
     const submitInformation = (event) => {
         event.preventDefault();
@@ -473,6 +491,50 @@ export default function Show({
                                     completed.
                                 </p>
 
+                                <div className="mt-4">
+                                    <label
+                                        htmlFor="approval-message"
+                                        className="block text-sm font-medium text-gray-300"
+                                    >
+                                        Final note (optional)
+                                    </label>
+
+                                    <p className="mt-1 text-sm leading-6 text-gray-500">
+                                        Leave a final thank-you, confirmation, or
+                                        closing note before the conversation becomes
+                                        read-only.
+                                    </p>
+
+                                    <textarea
+                                        id="approval-message"
+                                        rows="4"
+                                        maxLength="5000"
+                                        value={approvalData.message}
+                                        onChange={(event) =>
+                                            setApprovalData(
+                                                'message',
+                                                event.target.value,
+                                            )
+                                        }
+                                        placeholder="Example: Thank you, everything looks good."
+                                        className="mt-2 w-full rounded-lg border border-emerald-500/20 bg-gray-900 px-3 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-emerald-500"
+                                    />
+
+                                    <div className="mt-2 flex items-start justify-between gap-4">
+                                        <div>
+                                            {approvalErrors.message && (
+                                                <p className="text-sm text-red-400">
+                                                    {approvalErrors.message}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <p className="shrink-0 text-xs text-gray-500">
+                                            {approvalData.message.length}/5000
+                                        </p>
+                                    </div>
+                                </div>
+
                                 <div className="mt-4 rounded-lg border border-emerald-500/20 bg-gray-900 p-4">
                                     <p className="text-sm leading-6 text-gray-500">
                                         Approval completes this customization
@@ -600,7 +662,7 @@ export default function Show({
                                             type="button"
                                             onClick={declineQuote}
                                             disabled={processingQuoteDecision}
-                                            className="rounded-lg border border-red-500/20 bg-gray-900 px-4 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/50/10 disabled:cursor-not-allowed disabled:opacity-50"
+                                            className="rounded-lg border border-red-500/20 bg-gray-900 px-4 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
                                         >
                                             Decline Quote
                                         </button>
@@ -609,7 +671,7 @@ export default function Show({
                                             type="button"
                                             onClick={acceptQuote}
                                             disabled={processingQuoteDecision}
-                                            className="rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+                                            className="rounded-lg border border-blue-500/20 bg-gray-900 px-4 py-2.5 text-sm font-semibold text-blue-300 transition hover:bg-blue-500/10 disabled:cursor-not-allowed disabled:opacity-50"
                                         >
                                             {processingQuoteDecision
                                                 ? 'Processing...'
@@ -622,14 +684,54 @@ export default function Show({
                             {customizationRequest.status === 'accepted' && (
                                 <div className="mt-5 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4">
                                     <p className="text-sm font-semibold text-emerald-300">
-                                        Quotation accepted
+                                        {paymentSummary?.fully_paid_and_unheld
+                                            ? 'Payment verified'
+                                            : paymentSummary?.has_active_hold
+                                              ? 'Payment under review'
+                                              : 'Payment required'}
                                     </p>
 
-                                    <p className="mt-1 text-sm leading-6 text-emerald-300">
-                                        You accepted this quotation. BizzSoft
-                                        can now proceed with the development
-                                        workflow.
-                                    </p>
+                                    {paymentSummary?.fully_paid_and_unheld ? (
+                                        <p className="mt-1 text-sm leading-6 text-emerald-300">
+                                            Your quotation has been fully paid.
+                                            BizzSoft can now begin the development
+                                            workflow.
+                                        </p>
+                                    ) : paymentSummary?.has_active_hold ? (
+                                        <p className="mt-1 text-sm leading-6 text-emerald-300">
+                                            Your payment is currently under review.
+                                            Development will remain paused until the
+                                            payment hold is resolved.
+                                        </p>
+                                    ) : (
+                                        <>
+                                            <p className="mt-1 text-sm leading-6 text-emerald-300">
+                                                Your quotation has been accepted.
+                                                Payment must be verified before
+                                                development can begin.
+                                            </p>
+
+                                            {paymentSummary && (
+                                                <p className="mt-3 text-sm font-semibold text-white">
+                                                    Remaining:{' '}
+                                                    {formatPrice(
+                                                        paymentSummary.remaining_amount,
+                                                    )}
+                                                </p>
+                                            )}
+
+                                            <button
+                                                type="button"
+                                                onClick={startPayment}
+                                                disabled={processingPayment}
+                                                className="mt-4 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                {processingPayment
+                                                    ? 'Opening checkout...'
+                                                    : 'Pay with Paddle'}
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             )}
 
@@ -734,6 +836,34 @@ export default function Show({
                         </div>
                     )}
 
+                    {(messageHistory?.prev_page_url ||
+                        messageHistory?.next_page_url) && (
+                        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-gray-800 pt-5">
+                            <div>
+                                {messageHistory?.prev_page_url && (
+                                    <Link
+                                        href={messageHistory.prev_page_url}
+                                        preserveScroll
+                                        className="inline-flex rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-sm font-medium text-gray-300 transition hover:border-gray-600 hover:text-white"
+                                    >
+                                        Newer messages
+                                    </Link>
+                                )}
+                            </div>
+
+                            <div>
+                                {messageHistory?.next_page_url && (
+                                    <Link
+                                        href={messageHistory.next_page_url}
+                                        preserveScroll
+                                        className="inline-flex rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-sm font-medium text-gray-300 transition hover:border-gray-600 hover:text-white"
+                                    >
+                                        Older messages
+                                    </Link>
+                                )}
+                            </div>
+                        </div>
+                    )}
                     {customizationRequest.status ===
                         'needs_information' && (
                             <form
