@@ -67,7 +67,8 @@ class CustomerPaddleCheckoutTest extends TestCase
                 route(
                     'customer.orders.payment.checkout',
                     $order
-                )
+                ),
+                ['accepted_terms' => true]
             );
 
         $response
@@ -136,7 +137,8 @@ class CustomerPaddleCheckoutTest extends TestCase
                 route(
                     'customer.orders.payment.checkout',
                     $order
-                )
+                ),
+                ['accepted_terms' => true]
             );
 
         $response
@@ -188,7 +190,8 @@ class CustomerPaddleCheckoutTest extends TestCase
                 route(
                     'customer.orders.payment.checkout',
                     $order
-                )
+                ),
+                ['accepted_terms' => true]
             )
             ->assertStatus(502);
 

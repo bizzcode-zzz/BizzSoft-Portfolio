@@ -182,9 +182,14 @@ export default function Show({
     } = useForm({});
 
     const {
+        data: paymentData,
+        setData: setPaymentData,
         post: postPayment,
         processing: processingPayment,
-    } = useForm({});
+        errors: paymentErrors,
+    } = useForm({
+        accepted_terms: false,
+    });
 
     const messages = messageHistory?.data ?? [];
     const quote = customizationRequest.quote ?? null;
@@ -719,11 +724,52 @@ export default function Show({
                                                     )}
                                                 </p>
                                             )}
+                                            <label className="mt-4 flex max-w-xl items-start gap-3 text-sm leading-6 text-gray-400">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={paymentData.accepted_terms}
+                                                    onChange={(event) =>
+                                                        setPaymentData(
+                                                            'accepted_terms',
+                                                            event.target.checked,
+                                                        )
+                                                    }
+                                                    className="mt-1 h-4 w-4 shrink-0 rounded border-gray-600 bg-gray-900 text-blue-500 focus:ring-blue-500"
+                                                />
+
+                                                <span>
+                                                    I agree to the{' '}
+                                                    <a
+                                                        href="/terms"
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="font-medium text-blue-300 hover:text-blue-200"
+                                                    >
+                                                        Terms & Conditions
+                                                    </a>{' '}
+                                                    and{' '}
+                                                    <a
+                                                        href="/refund-policy"
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="font-medium text-blue-300 hover:text-blue-200"
+                                                    >
+                                                        Refund Policy
+                                                    </a>
+                                                    .
+                                                </span>
+                                            </label>
+
+                                            {paymentErrors.accepted_terms && (
+                                                <p className="mt-2 text-sm text-red-300">
+                                                    {paymentErrors.accepted_terms}
+                                                </p>
+                                            )}
 
                                             <button
                                                 type="button"
                                                 onClick={startPayment}
-                                                disabled={processingPayment}
+                                                disabled={processingPayment || !paymentData.accepted_terms}
                                                 className="mt-4 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
                                             >
                                                 {processingPayment

@@ -20,6 +20,7 @@ export default function Order({
     payments,
 }) {
     const [startingCheckout, setStartingCheckout] = useState(false);
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
 
     const formatPrice = (amount, currency = 'USD') => {
         return new Intl.NumberFormat('en-US', {
@@ -50,7 +51,7 @@ export default function Order({
 
         router.post(
             `/orders/${order.id}/payment/checkout`,
-            {},
+            { accepted_terms: acceptedTerms },
             {
                 preserveScroll: true,
                 onStart: () => {
@@ -176,20 +177,55 @@ export default function Order({
                                 </p>
                             </div>
 
-                            <button
-                                type="button"
-                                onClick={startCheckout}
-                                disabled={startingCheckout}
-                                className={`inline-flex shrink-0 items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold text-white transition ${
-                                    startingCheckout
-                                        ? 'cursor-not-allowed bg-blue-800 opacity-70'
-                                        : 'bg-blue-600 hover:bg-blue-500'
-                                }`}
-                            >
-                                {startingCheckout
-                                    ? 'Starting Checkout...'
-                                    : `Pay with ${providerLabel}`}
-                            </button>
+                            <div className="flex shrink-0 flex-col items-start gap-3 sm:items-end">
+                                <label className="flex max-w-sm items-start gap-3 text-sm leading-6 text-gray-400 sm:max-w-xs">
+                                    <input
+                                        type="checkbox"
+                                        checked={acceptedTerms}
+                                        onChange={(event) =>
+                                            setAcceptedTerms(event.target.checked)
+                                        }
+                                        className="mt-1 h-4 w-4 shrink-0 rounded border-gray-600 bg-gray-900 text-blue-500 focus:ring-blue-500"
+                                    />
+
+                                    <span>
+                                        I agree to the{' '}
+                                        <a
+                                            href="/terms"
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="font-medium text-blue-300 hover:text-blue-200"
+                                        >
+                                            Terms & Conditions
+                                        </a>{' '}
+                                        and{' '}
+                                        <a
+                                            href="/refund-policy"
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="font-medium text-blue-300 hover:text-blue-200"
+                                        >
+                                            Refund Policy
+                                        </a>
+                                        .
+                                    </span>
+                                </label>
+
+                                <button
+                                    type="button"
+                                    onClick={startCheckout}
+                                    disabled={startingCheckout || !acceptedTerms}
+                                    className={`inline-flex shrink-0 items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold text-white transition ${
+                                        startingCheckout || !acceptedTerms
+                                            ? 'cursor-not-allowed bg-blue-800 opacity-50'
+                                            : 'bg-blue-600 hover:bg-blue-500'
+                                    }`}
+                                >
+                                    {startingCheckout
+                                        ? 'Starting Checkout...'
+                                        : `Pay with ${providerLabel}`}
+                                </button>
+                            </div>
                         </div>
                     </div>
 

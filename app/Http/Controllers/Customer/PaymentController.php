@@ -88,6 +88,13 @@ class PaymentController extends Controller
         PaymentNumberGenerator $paymentNumbers,
         CheckoutReservations $reservations
     ): HttpResponse {
+        abort_unless(
+            $order->user_id === $request->user()->id,
+            404
+        );
+
+        $this->validateLegalConsent($request);
+
         [$payment, $mayDispatch] = $reservations->reserve(
             $order, $request->user()->id, $gateway->provider(), $paymentNumbers
         );
@@ -144,6 +151,7 @@ class PaymentController extends Controller
         CheckoutReservations $reservations
     ): HttpResponse {
         $this->authorize('update', $customizationRequest);
+        $this->validateLegalConsent($request);
 
         $quote = $customizationRequest
             ->quote()
@@ -244,6 +252,19 @@ class PaymentController extends Controller
 
         return Inertia::location(
             $payment->metadata['checkout_url']
+        );
+    }
+
+    private function validateLegalConsent(Request $request): void
+    {
+        $request->validate(
+            [
+                'accepted_terms' => ['accepted'],
+            ],
+            [
+                'accepted_terms.accepted' =>
+                    'You must accept the Terms & Conditions and Refund Policy before starting checkout.',
+            ]
         );
     }
 

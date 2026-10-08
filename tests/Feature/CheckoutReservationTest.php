@@ -29,6 +29,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -107,7 +108,7 @@ class CheckoutReservationTest extends TestCase
         $this->grammar = new ReservationRecordingGrammar(DB::connection());
         DB::connection()->setQueryGrammar($this->grammar);
 
-        $this->request = Request::create('/offline-checkout', 'POST');
+        $this->request = Request::create('/offline-checkout', 'POST', ['accepted_terms' => true]);
         $this->request->headers->set('X-Inertia', 'true');
         $this->request->setLaravelSession(app('session.store'));
         $this->app->instance('request', $this->request);
@@ -135,6 +136,24 @@ class CheckoutReservationTest extends TestCase
         ReservationOfflineDiscovery::$client = null;
         DB::purge('checkout_offline');
         parent::tearDown();
+    }
+
+    public function test_order_checkout_requires_legal_consent(): void
+    {
+        $this->request->replace([]);
+
+        try {
+            $this->checkout();
+            $this->fail('Expected checkout to require legal consent.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey(
+                'accepted_terms',
+                $exception->errors()
+            );
+        }
+
+        $this->assertSame(0, Payment::count());
+        $this->assertSame([], $this->requests);
     }
 
     public function test_reservation_rejects_an_ambient_database_transaction(): void

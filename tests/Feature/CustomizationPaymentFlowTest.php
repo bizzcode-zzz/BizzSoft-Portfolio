@@ -38,7 +38,8 @@ class CustomizationPaymentFlowTest extends TestCase
                 route(
                     'customizations.payment.checkout',
                     $customization
-                )
+                ),
+                ['accepted_terms' => true]
             )
             ->assertStatus(409)
             ->assertHeader(
@@ -85,6 +86,32 @@ class CustomizationPaymentFlowTest extends TestCase
         );
     }
 
+    public function test_customization_checkout_requires_legal_consent(): void
+    {
+        $gateway = $this->bindFakeGateway();
+        $customer = $this->createCustomer();
+
+        [$customization, $quote] =
+            $this->createCustomization(
+                $customer,
+                CustomizationRequestStatus::Accepted
+            );
+
+        $this
+            ->actingAs($customer)
+            ->withHeader('X-Inertia', 'true')
+            ->post(
+                route(
+                    'customizations.payment.checkout',
+                    $customization
+                )
+            )
+            ->assertSessionHasErrors('accepted_terms');
+
+        $this->assertSame(0, $gateway->calls);
+        $this->assertSame(0, $quote->payments()->count());
+    }
+
     public function test_repeated_checkout_reuses_the_same_reservation(): void
     {
         $gateway = $this->bindFakeGateway();
@@ -105,7 +132,8 @@ class CustomizationPaymentFlowTest extends TestCase
                     route(
                         'customizations.payment.checkout',
                         $customization
-                    )
+                    ),
+                    ['accepted_terms' => true]
                 )
                 ->assertStatus(409)
                 ->assertHeader(
@@ -142,7 +170,8 @@ class CustomizationPaymentFlowTest extends TestCase
                 route(
                     'customizations.payment.checkout',
                     $customization
-                )
+                ),
+                ['accepted_terms' => true]
             )
             ->assertStatus(502);
 
@@ -174,7 +203,8 @@ class CustomizationPaymentFlowTest extends TestCase
                 route(
                     'customizations.payment.checkout',
                     $customization
-                )
+                ),
+                ['accepted_terms' => true]
             )
             ->assertStatus(409)
             ->assertHeader(
@@ -253,7 +283,8 @@ class CustomizationPaymentFlowTest extends TestCase
                 route(
                     'customizations.payment.checkout',
                     $customization
-                )
+                ),
+                ['accepted_terms' => true]
             )
             ->assertStatus(422);
 
@@ -278,7 +309,8 @@ class CustomizationPaymentFlowTest extends TestCase
                 route(
                     'customizations.payment.checkout',
                     $customization
-                )
+                ),
+                ['accepted_terms' => true]
             )
             ->assertStatus(422);
 
