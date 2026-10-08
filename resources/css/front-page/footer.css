@@ -296,6 +296,38 @@
 }
 
 
+.site-footer-legal {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px 18px;
+}
+
+
+.site-footer-legal a {
+    position: relative;
+
+    color: rgba(255, 255, 255, 0.42);
+
+    font-size: 12px;
+    font-weight: 450;
+
+    line-height: 1.5;
+    text-decoration: none;
+
+    transition:
+        color 240ms ease,
+        transform 240ms ease;
+}
+
+
+.site-footer-legal a:hover {
+    color: rgba(255, 255, 255, 0.88);
+
+    transform: translateY(-1px);
+}
+
 .site-footer-signature {
     display: inline-flex;
 

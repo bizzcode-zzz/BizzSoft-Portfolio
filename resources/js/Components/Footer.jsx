@@ -123,6 +123,11 @@ export default function Footer() {
                         © 2026 BizzSoft. All rights reserved.
                     </span>
 
+                    <nav className="site-footer-legal" aria-label="Legal">
+                        <a href="/terms">Terms & Conditions</a>
+                        <a href="/refund-policy">Refund Policy</a>
+                        <a href="/privacy-policy">Privacy Policy</a>
+                    </nav>
                     <span className="site-footer-signature">
                         BUILT WITH LOVE
                         <span className="site-footer-heart">

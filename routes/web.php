@@ -52,6 +52,18 @@ Route::get('/', function () {
     return Inertia::render('Home');
 });
 
+Route::get('/terms', function () {
+    return Inertia::render('Legal/Terms');
+})->name('legal.terms');
+
+Route::get('/refund-policy', function () {
+    return Inertia::render('Legal/RefundPolicy');
+})->name('legal.refund');
+
+Route::get('/privacy-policy', function () {
+    return Inertia::render('Legal/PrivacyPolicy');
+})->name('legal.privacy');
+
 /*
 |--------------------------------------------------------------------------
 | Public Products
