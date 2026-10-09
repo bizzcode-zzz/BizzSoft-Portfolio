@@ -260,15 +260,17 @@ export default function Contact() {
                         <div className="space-y-6">
                             <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-6 sm:p-8">
                                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
-                                    Buyer Support
+                                    Direct Support
                                 </p>
 
                                 <h2 className="mt-3 text-xl font-semibold text-white">
-                                    Contact BizzSoft
+                                    Prefer email?
                                 </h2>
 
                                 <p className="mt-3 text-sm leading-6 text-white/55">
-                                    You can also contact us directly by email.
+                                    If you would rather contact us outside the
+                                    form, send your message directly to our
+                                    support inbox.
                                 </p>
 
                                 <a
@@ -279,8 +281,8 @@ export default function Contact() {
                                 </a>
 
                                 <p className="mt-5 text-xs leading-5 text-white/35">
-                                    Include your order number or payment number
-                                    when contacting us about a purchase.
+                                    For purchase-related questions, include
+                                    your order or payment number when available.
                                 </p>
                             </div>
 
@@ -334,7 +336,7 @@ export default function Contact() {
                             {faqs.map((faq) => (
                                 <div
                                     key={faq.question}
-                                    className="border-b border-white/10 py-6 first:pt-0"
+                                    className="border-b border-white/10 py-6"
                                 >
                                     <h3 className="font-semibold text-white">
                                         {faq.question}
