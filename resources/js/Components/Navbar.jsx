@@ -22,7 +22,7 @@ export default function Navbar() {
                     className="navbar-logo"
                 >
                     <img
-                        src="/images/bizzsoft-logo.png"
+                        src="/images/BizzSoft-logo.png"
                         alt="BizzSoft"
                         className="navbar-logo-image"
                     />
@@ -98,7 +98,7 @@ export default function Navbar() {
                     </span>
 
                     <span className="navbar-cta-arrow">
-                        →
+                        â†’
                     </span>
                 </a>
 
