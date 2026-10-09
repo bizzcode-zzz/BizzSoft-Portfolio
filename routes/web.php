@@ -30,6 +30,7 @@ use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\Http\Controllers\Customer\PaymentController as CustomerPaymentController;
 use App\Http\Controllers\Customer\ProductLibraryController;
 use App\Http\Controllers\Customer\ProductReleaseDownloadController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CustomerDashboardController;
 use App\Http\Controllers\CustomizationCancellationController;
 use App\Http\Controllers\CustomizationConversationController;
@@ -63,6 +64,12 @@ Route::get('/refund-policy', function () {
 Route::get('/privacy-policy', function () {
     return Inertia::render('Legal/PrivacyPolicy');
 })->name('legal.privacy');
+Route::get('/contact', function () {
+    return Inertia::render('Contact');
+})->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])
+    ->middleware('throttle:contact')
+    ->name('contact.store');
 
 /*
 |--------------------------------------------------------------------------

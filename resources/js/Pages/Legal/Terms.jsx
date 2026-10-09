@@ -1,4 +1,4 @@
-﻿import { Head } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Footer from '../../Components/Footer';
 
@@ -103,12 +103,7 @@ export default function Terms() {
                             </p>
 
                             <p>
-                                Orders paid through Paddle are processed by
-                                Paddle.com as our authorized online reseller
-                                and Merchant of Record. Paddle handles payment
-                                processing, applicable sales taxes, billing,
-                                and payment-related returns for
-                                Paddle-processed purchases.
+                                Our order process is conducted by our online reseller Paddle.com. Paddle.com is the Merchant of Record for all our orders. Paddle provides all customer service inquiries and handles returns
                             </p>
 
                             <p>
@@ -266,9 +261,14 @@ export default function Terms() {
                             <p>
                                 Questions about BizzSoft products, licensing,
                                 downloads, customization services, or these
-                                Terms may be submitted through the contact and
-                                customer support channels provided on this
-                                website.
+                                Terms may be sent to{' '}
+                                <a
+                                    href="mailto:support@bizzsoft.dev"
+                                    className="font-medium text-cyan-300 hover:text-cyan-200"
+                                >
+                                    support@bizzsoft.dev
+                                </a>
+                                .
                             </p>
 
                             <p>

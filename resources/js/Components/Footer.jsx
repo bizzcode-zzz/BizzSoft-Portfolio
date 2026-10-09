@@ -98,13 +98,13 @@ export default function Footer() {
                             </a>
 
                             <a
-                                href="#contact"
+                                href="mailto:support@bizzsoft.dev"
                             >
                                 Email
                             </a>
 
                             <a
-                                href="#contact"
+                                href="/contact"
                             >
                                 Let's Talk
                             </a>
