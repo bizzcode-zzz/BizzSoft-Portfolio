@@ -98,7 +98,7 @@ export default function Navbar() {
                     </span>
 
                     <span className="navbar-cta-arrow">
-                        â†’
+                        →
                     </span>
                 </a>
 
